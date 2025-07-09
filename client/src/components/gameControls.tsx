@@ -5,8 +5,10 @@ import { useChessContext } from "@/hooks/ChessContext"
 
 function GameControls({
   setIsPlaying,
+  isInDashboard = false,
 }: {
   setIsPlaying: Dispatch<SetStateAction<boolean>>
+  isInDashboard?: boolean
 }) {
   const [isSelectingRole, setIsSelectingRole] = useState<boolean>(false)
   const [isUserWhite, setIsUserWhite] = useState<boolean | null>(null)
@@ -47,59 +49,74 @@ function GameControls({
     }
   }
 
-  return (
-    <div className="mb-6 w-full max-w-2xl">
-      {/* Medieval Game Status Banner */}
-      {isUserWhite !== null && (
-        <div className="mb-6 relative">
-          {/* Decorative banner background */}
-          <div className="bg-gradient-to-r from-[var(--secondary)] via-[var(--muted)] to-[var(--secondary)] p-6 rounded-lg border-2 border-[var(--border)] shadow-2xl relative overflow-hidden">
+  const resetGame = () => {
+    setIsPlaying(false)
+    setIsSelectingRole(false)
+    setIsUserWhite(null)
+    gameIdRef.current = ""
+    roleRef.current = null
+    setGameMessage("")
+  }
+
+  // When in Dashboard mode, always show the game status panel
+  if (isInDashboard) {
+    return (
+      <div className="w-full space-y-4">
+        {/* Medieval Game Status Panel - Always visible in dashboard */}
+        <div className="relative">
+          <div className="bg-gradient-to-b from-[var(--secondary)] via-[var(--muted)] to-[var(--secondary)] p-6 rounded-lg border-2 border-[var(--border)] shadow-2xl relative overflow-hidden">
             {/* Medieval banner decoration */}
             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[var(--accent)] via-[var(--primary-foreground)] to-[var(--accent)]" />
 
             <div className="relative z-10">
               <div className="text-center mb-4">
-                <h2 className="text-2xl font-bold text-[var(--primary-foreground)] tracking-wider flex items-center justify-center gap-2">
+                <h3 className="text-xl font-bold text-[var(--primary-foreground)] tracking-wider flex items-center justify-center gap-2">
                   ⚔️ BATTLE STATUS ⚔️
-                </h2>
-                <div className="h-px w-32 bg-[var(--accent)] mx-auto mt-2" />
+                </h3>
+                <div className="h-px w-24 bg-[var(--accent)] mx-auto mt-2" />
               </div>
 
+              {/* Game Message */}
               <div className="text-center mb-4">
                 <span
-                  className={`text-2xl font-bold tracking-wide ${
+                  className={`text-lg font-bold tracking-wide ${
                     gameMessage.includes("Game Over")
                       ? gameMessage.includes("Congratulations, you win!")
-                        ? "text-green-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" // Victory
-                        : "text-red-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" // Defeat
+                        ? "text-green-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                        : "text-red-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                       : "text-[var(--accent)] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
                   }`}
                 >
-                  {gameMessage}
+                  {gameMessage || "Battle Ready"}
                 </span>
               </div>
 
+              {/* Game Status Content */}
               {gameMessage.includes("Game Over") ? (
-                <div className="text-center text-[var(--secondary-foreground)] text-lg italic">
+                <div className="text-center text-[var(--secondary-foreground)] mb-4 italic">
                   The battle has concluded. Prepare thy mind for another glorious encounter!
                 </div>
               ) : (
-                <div className="flex items-center justify-between text-lg">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[var(--secondary-foreground)]">Commanding:</span>
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold border-2 ${
-                        isUserWhite
-                          ? "bg-[var(--primary-foreground)] text-[var(--primary)] border-[var(--primary-foreground)]"
-                          : "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--border)]"
-                      }`}
-                    >
-                      {isUserWhite ? "⚪ WHITE LEGION" : "⚫ BLACK LEGION"}
-                    </span>
-                  </div>
+                <div className="space-y-3">
+                  {/* Player Color Display */}
+                  {roleRef.current !== null && (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-[var(--secondary-foreground)]">Commanding:</span>
+                      <span
+                        className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold border-2 ${
+                          roleRef.current
+                            ? "bg-[var(--primary-foreground)] text-[var(--primary)] border-[var(--primary-foreground)]"
+                            : "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--border)]"
+                        }`}
+                      >
+                        {roleRef.current ? "⚪ WHITE LEGION" : "⚫ BLACK LEGION"}
+                      </span>
+                    </div>
+                  )}
 
-                  {!gameMessage.includes("Started") && (
-                    <div className="flex items-center gap-2">
+                  {/* Turn Indicator */}
+                  {!gameMessage.includes("Started") && roleRef.current !== null && (
+                    <div className="text-center">
                       <span
                         className={`font-bold text-lg ${
                           isUserTurn ? "text-[var(--accent)] animate-pulse" : "text-[var(--muted-foreground)]"
@@ -111,12 +128,49 @@ function GameControls({
                   )}
                 </div>
               )}
+
+              {/* New Game Button */}
+              <div className="mt-4 text-center">
+                <button
+                  onClick={resetGame}
+                  className="px-6 py-2 bg-gradient-to-b from-[var(--accent)] to-[var(--primary)] text-[var(--primary-foreground)] font-bold rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50"
+                >
+                  ⚔️ FORGE NEW BATTLE
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Medieval Game Controls */}
+        {/* Additional Game Info Panel */}
+        <div className="bg-gradient-to-b from-[var(--secondary)] to-[var(--muted)] p-4 rounded-lg border border-[var(--border)] shadow-lg">
+          <h4 className="text-lg font-bold text-[var(--primary-foreground)] mb-3 text-center">⚔️ BATTLE COMMANDS ⚔️</h4>
+          <div className="space-y-2 text-sm text-[var(--secondary-foreground)]">
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--accent)]">🎯</span>
+              <span>Click pieces to select and move</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--accent)]">🔵</span>
+              <span>Blue highlights show valid moves</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--accent)]">🔴</span>
+              <span>Red highlights show captures</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--accent)]">🟣</span>
+              <span>Purple shows special moves</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Original GameControls for landing page
+  return (
+    <div className="mb-6 w-full max-w-2xl">
       <div className="bg-gradient-to-b from-[var(--secondary)] to-[var(--muted)] p-8 rounded-lg border-2 border-[var(--border)] shadow-2xl relative">
         {/* Decorative corner elements */}
         <div className="absolute top-2 left-2 text-[var(--accent)] opacity-30">♜</div>
@@ -137,7 +191,6 @@ function GameControls({
             </div>
 
             <div className="flex space-x-6">
-              {/* White Army Button */}
               <button
                 onClick={() => {
                   setIsUserWhite(true)
@@ -148,10 +201,8 @@ function GameControls({
                 className="group relative px-8 py-4 bg-gradient-to-b from-[var(--primary-foreground)] to-[var(--secondary-foreground)] text-[var(--primary)] font-bold text-lg rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="flex items-center gap-2">⚪ WHITE LEGION</span>
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white opacity-0 group-hover:opacity-20 rounded-lg transition-opacity duration-200" />
               </button>
 
-              {/* Black Army Button */}
               <button
                 onClick={() => {
                   setIsUserWhite(false)
@@ -162,7 +213,6 @@ function GameControls({
                 className="group relative px-8 py-4 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] text-[var(--primary-foreground)] font-bold text-lg rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="flex items-center gap-2">⚫ BLACK LEGION</span>
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent to-black opacity-0 group-hover:opacity-20 rounded-lg transition-opacity duration-200" />
               </button>
             </div>
           </div>
@@ -175,7 +225,6 @@ function GameControls({
               }}
             >
               <span className="flex items-center gap-3">⚔️ FORGE NEW BATTLE ⚔️</span>
-              <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-200" />
             </button>
           </div>
         )}

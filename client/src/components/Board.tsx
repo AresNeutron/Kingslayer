@@ -19,7 +19,7 @@ function Board() {
         <div className="absolute inset-2 border-2 border-[var(--accent)] opacity-30 rounded-xl"></div>
       </div>
 
-      {/* Main chess board */}
+      {/* Main chess board - optimized for horizontal layout */}
       <div
         className="w-[var(--board-size)] h-[var(--board-size)] grid grid-cols-8 grid-rows-8 
                    border-4 border-[var(--accent)] rounded-xl overflow-hidden relative 
@@ -47,7 +47,6 @@ function Board() {
         {Array.from({ length: 64 }).map((_, index) => {
           const isBlack = Math.floor(index / 8) % 2 === index % 2
           const col = index % 8
-          // Invert the row if user plays as white
           const row = roleRef.current ? 7 - Math.floor(index / 8) : Math.floor(index / 8)
 
           return (
@@ -55,9 +54,7 @@ function Board() {
               key={index}
               className="flex items-center justify-center text-xs transition-all duration-300 ease-in-out relative"
               style={{
-                backgroundColor: isBlack
-                  ? "#8B4513" // Dark medieval wood (saddle brown)
-                  : "#DEB887", // Light medieval wood (burlywood)
+                backgroundColor: isBlack ? "#8B4513" : "#DEB887",
                 boxShadow: isBlack ? "inset 0 0 10px rgba(0,0,0,0.2)" : "inset 0 0 10px rgba(255,255,255,0.1)",
               }}
             >
@@ -77,8 +74,8 @@ function Board() {
         <Pieces />
       </div>
 
-      {/* Medieval coordinate labels (optional decorative touch) */}
-      <div className="absolute -left-8 top-0 h-full flex flex-col justify-around text-[var(--muted-foreground)] font-bold">
+      {/* Medieval coordinate labels - adjusted for horizontal layout */}
+      <div className="absolute -left-10 top-0 h-full flex flex-col justify-around text-[var(--muted-foreground)] font-bold">
         {(roleRef.current ? ["1", "2", "3", "4", "5", "6", "7", "8"] : ["8", "7", "6", "5", "4", "3", "2", "1"]).map(
           (num, i) => (
             <span key={i} className="text-lg">
@@ -87,7 +84,7 @@ function Board() {
           ),
         )}
       </div>
-      <div className="absolute -bottom-8 left-0 w-full flex justify-around text-[var(--muted-foreground)] font-bold">
+      <div className="absolute -bottom-10 left-0 w-full flex justify-around text-[var(--muted-foreground)] font-bold">
         {["a", "b", "c", "d", "e", "f", "g", "h"].map((letter, i) => (
           <span key={i} className="text-lg">
             {letter}

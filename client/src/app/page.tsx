@@ -7,7 +7,7 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 relative">
+    <div className="min-h-screen p-4 relative">
       {/* Medieval decorative border */}
       <div className="absolute inset-4 border-2 border-[var(--border)] rounded-lg opacity-30 pointer-events-none" />
 
@@ -60,13 +60,11 @@ export default function Home() {
           </div>
         )}
 
-        <GameControls setIsPlaying={setIsPlaying} />
+        {/* Game controls - now integrated into the layout */}
+        {!isPlaying && <GameControls setIsPlaying={setIsPlaying} />}
 
-        {isPlaying && (
-          <div className="mt-8 w-full flex justify-center">
-            <Dashboard />
-          </div>
-        )}
+        {/* Dashboard with new horizontal layout */}
+        {isPlaying && <Dashboard setIsPlaying={setIsPlaying} />}
       </div>
 
       {/* Corner decorative elements */}
