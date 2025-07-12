@@ -24,22 +24,6 @@ enum Piece : uint8_t {
     NO_PIECE      = 12
 };
 
-const std::array<std::string, 13> PIECE_SYMBOLS = {
-        "BB", // BLACK_BISHOP
-        "BK", // BLACK_KING
-        "BN", // BLACK_KNIGHT
-        "BP", // BLACK_PAWN
-        "BQ", // BLACK_QUEEN
-        "BR", // BLACK_ROOK
-        "WB", // WHITE_BISHOP
-        "WK", // WHITE_KING
-        "WN", // WHITE_KNIGHT
-        "WP", // WHITE_PAWN
-        "WQ", // WHITE_QUEEN
-        "WR", // WHITE_ROOK
-        ".."  // NO_PIECE
-    };
-
 // Para mapear pieza → índice “tipo” (0=alfil,1=rey,2=caballo,3=peón,4=dama,5=torre)
 // independientemente de color:
 enum Type : uint8_t {
@@ -79,4 +63,11 @@ enum MoveType : uint8_t {
     EN_PASSANT = 3,
     PROMOTION = 4,
     PROMOTION_CAPTURE = 5,
+};
+
+struct UndoInfo {
+    uint16_t move_code;  // static_cast<uint16_t>((from_sq << 6) | to_sq);
+    Piece captured_piece;
+    int8_t prev_en_passant_sq;
+    uint8_t prev_castling_rights;
 };

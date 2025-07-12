@@ -1,82 +1,101 @@
 #include "BoardState.h"
 #include <cstdint>
-#include <vector>
-#include <iostream>
+
+// =========================
+// BOARD MANIPULATION - OPTIMIZED
+// =========================
+void BoardState::setStartPosition() {
+    board = INITIAL_MAILBOX_BOARD;
+    types_bb_array = INITIAL_PIECE_BITBOARDS;
+    occupied_bb = INITIAL_OCCUPANCY_ALL;
+    colors_bb_array = INITIAL_OCCUPANCY_BY_COLOR;
+}
 
 void BoardState::movePiece(int fromSq, int toSq) {
-    int bit_count = __builtin_popcountll(occupied_bb);
-
-    Piece pc = board[fromSq];
-
-    if (pc == NO_PIECE) {
-        std::cout << "Este escaque está vacío" << std::endl;
-        std::cout << fromSq << std::endl;
-        return;
-    }
-
-    int color = colorOf(pc);
-
-    uint64_t mFrom = (1ULL << fromSq);
-    uint64_t mTo   = (1ULL << toSq);
-
-    // Borra “from”
-    types_bb_array[pc]   &= ~mFrom;
-    occupied_bb     &= ~mFrom;
-    colors_bb_array[color] &= ~mFrom;
-
-    // Pone “to”
-    types_bb_array[pc]   |= mTo;
-    occupied_bb     |= mTo;
-    colors_bb_array[color] |= mTo;
-
-    // Actualiza mailbox
+    const Piece pc = board[fromSq];
+    const Color color = colorOf(pc);
+    
+    const uint64_t fromMask = 1ULL << fromSq;
+    const uint64_t toMask = 1ULL << toSq;
+    const uint64_t moveMask = fromMask | toMask;
+    
+    // Update piece bitboard: clear from, set to
+    types_bb_array[pc] ^= moveMask;
+    
+    // Update color bitboard: clear from, set to
+    colors_bb_array[color] ^= moveMask;
+    
+    // Update occupancy: clear from, set to
+    occupied_bb ^= moveMask;
+    
+    // Update mailbox
     board[fromSq] = NO_PIECE;
-    board[toSq]   = pc;
-
-    if (__builtin_popcountll(occupied_bb) != bit_count) {
-        std::cout << "Error en la función de mover piezas" << std::endl;
-        std::cout << bit_count << std::endl;
-        std::cout << __builtin_popcountll(occupied_bb) << std::endl;
-    }
+    board[toSq] = pc;
 }
 
 void BoardState::addPiece(int sq, Piece pc) {
     if (pc == NO_PIECE) return;
-
-    int bit_count = __builtin_popcountll(occupied_bb);
-
-    board[sq] = pc;
-    int color = colorOf(pc);
-
-    uint64_t mask = (1ULL << sq);
-
-    types_bb_array[pc]   |= mask;
-    occupied_bb     |= mask;
+    
+    const uint64_t mask = 1ULL << sq;
+    const Color color = colorOf(pc);
+    
+    // Update all bitboards
+    types_bb_array[pc] |= mask;
     colors_bb_array[color] |= mask;
+    occupied_bb |= mask;
+    
+    // Update mailbox
+    board[sq] = pc;
+}
 
-    if (__builtin_popcountll(occupied_bb) != (bit_count + 1)) {
-        std::cout << "Error durante la addición" << std::endl;
-    }
+Piece BoardState::deletePiece(int sq) {
+    const Piece pc = board[sq];
+    if (pc == NO_PIECE) return NO_PIECE;
+    
+    const uint64_t mask = 1ULL << sq;
+    const Color color = colorOf(pc);
+    
+    // Update all bitboards
+    types_bb_array[pc] &= ~mask;
+    colors_bb_array[color] &= ~mask;
+    occupied_bb &= ~mask;
+    
+    // Update mailbox
+    board[sq] = NO_PIECE;
+    
+    return pc;
 }
 
 
-Piece BoardState::deletePiece(int sq) {
-    int bit_count = __builtin_popcountll(occupied_bb);
+void BoardState::castling(int from_sq, int to_sq, bool reverse) {
+    Piece king = piece_at(from_sq);
+    Color sideToMove = colorOf(king);
 
-    Piece pc = board[sq];
-    int color = colorOf(pc);
+    int rook_from = NO_SQ, rook_to = NO_SQ;
 
-    uint64_t mask = (1ULL << sq);
+    if (to_sq - from_sq == +2) {
+        if (sideToMove == WHITE) {
+            rook_from = SQ_H1;  // 7
+            rook_to   = SQ_F1;  // 5
+        } else {
+            rook_from = SQ_H8;  // 63
+            rook_to   = SQ_F8;  // 61
+        }
+    } else if (to_sq - from_sq == -2) {
+        if (sideToMove == WHITE) {
+            rook_from = SQ_A1;  // 0
+            rook_to   = SQ_D1;  // 3
+        } else {
+            rook_from = SQ_A8;  // 56
+            rook_to   = SQ_D8;  // 59
+        }
+    } 
 
-    types_bb_array[pc]   &= ~mask;
-    occupied_bb     &= ~mask;
-    colors_bb_array[color] &= ~mask;
-
-    board[sq] = NO_PIECE;
-
-    if (__builtin_popcountll(occupied_bb) != (bit_count - 1)) {
-        std::cout << "Error en la Eliminación" << std::endl;
+    if (reverse) {
+        movePiece(rook_to, rook_from);
+        movePiece(to_sq, from_sq);
+    } else {
+        movePiece(from_sq, to_sq);
+        movePiece(rook_from, rook_to);
     }
-
-    return pc;
 }

@@ -5,11 +5,10 @@
 
 // Verifies if last enemy move put ally king in check
 uint64_t Game::detect_check() {
-    Piece king = static_cast<Piece>(KING + sideToMove * PC_NUM); // index of the king
-    uint64_t king_bb = board_state.types_bb_array[king];
+    uint64_t king_bb = board_state.king(sideToMove);
     int king_sq = __builtin_ctzll(king_bb);
 
-    uint64_t threats = board_state.get_attackers_for_sq(sideToMove, king_sq);
+    uint64_t threats = board_state.getAttackersForSq(sideToMove, king_sq);
     if (threats != 0) {
         game_event = CHECK;
     }
@@ -19,8 +18,7 @@ uint64_t Game::detect_check() {
 
 // Verifies if last enemy move ended the game, only called when check was previously detected
 void Game::detect_game_over(uint64_t threats) {
-    Piece king = static_cast<Piece>(KING + sideToMove * PC_NUM); // index of the king
-    uint64_t king_bb = board_state.types_bb_array[king];
+    uint64_t king_bb = board_state.king(sideToMove);
     int king_sq = __builtin_ctzll(king_bb);
 
     bool double_check = (__builtin_popcountll(threats) >= 2);
@@ -34,9 +32,9 @@ void Game::detect_game_over(uint64_t threats) {
         return;
     }
 
-    uint64_t friendly_bb = getSideBitboard();
+    uint64_t friendly_bb = board_state.color_bb(sideToMove);
 
-    for (int sq : BoardState::bitboard_to_squares(friendly_bb)) {
+    FOR_EACH_SET_BIT(friendly_bb, sq) {
         int moveCount = get_legal_moves(sq);
         if (moveCount) {
             return; // No checkmate

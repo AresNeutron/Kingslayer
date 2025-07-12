@@ -29,6 +29,10 @@ constexpr std::array<uint64_t, 2> INITIAL_OCCUPANCY_BY_COLOR = {
     0b0000000000000000000000000000000000000000000000001111111111111111ULL  // white_pieces (ranks 2 and 1)
 };
 
+constexpr uint64_t WHITE_EN_PASSANT_TRACK = 0x000000FF00000000ULL; // Fila 4 para peones blancos
+constexpr uint64_t BLACK_EN_PASSANT_TRACK = 0x00000000FF000000ULL; // Fila 5 para peones negros
+
+
 // Bitboards para saber si un peón está promoviendo
 constexpr std::array<uint64_t, 2> PROMOTION_ROWS = {
     0b0000000000000000000000000000000000000000000000000000000011111111ULL,
@@ -63,6 +67,13 @@ constexpr std::array<Piece, 64> INITIAL_MAILBOX_BOARD = {
     BLACK_ROOK, BLACK_KNIGHT, BLACK_BISHOP, BLACK_QUEEN, BLACK_KING, BLACK_BISHOP, BLACK_KNIGHT, BLACK_ROOK  // Rank 8 (56-63)
 };
 
+constexpr std::array<const char*, 5> eventMessages = {
+    "none", "check", "checkmate", "stalemate", "promotion"
+};
+
+constexpr int MAX_DEPTH = 10; // This is the max secure depth by now
+constexpr int MAX_MOVES = 28; // This number is an ideal case: queen in the middle of an empty board
+
 
 inline int getCastlingIdx(int rook_square) {
     switch (rook_square) {
@@ -74,6 +85,20 @@ inline int getCastlingIdx(int rook_square) {
     return NO_SQ;
 }
 
+std::array<int, 2> getCastlingPath(int rook_square) {
+    switch (rook_square) {
+        case 0:  return {2, 3}; // Torre en 0 para flanco de dama blanco
+        case 7:  return {5, 6}; // Torre en 7 para flanco de rey blanco
+        case 56: return {58, 59}; // Torre en 56 para flanco de dama negro
+        case 63: return {61, 62}; // Torre en 63 para flanco de rey negro
+    }
+    return {NO_SQ, NO_SQ};
+}
+
+#define FOR_EACH_SET_BIT(bitboard, sq) \
+    for (uint64_t bb = (bitboard); bb; bb &= bb - 1) \
+        for (int sq = __builtin_ctzll(bb); bb; bb = 0)
 
 constexpr int CHECK_BONUS = 1000;
 constexpr int CHECKMATE_BONUS = 10000;
+

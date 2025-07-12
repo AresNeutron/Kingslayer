@@ -4,139 +4,169 @@
 
 
 void Game::make_move(uint16_t move_code) {
-    int from_sq = ((move_code >> 6) & 0b111111U);
-
-    if (board_state.board[from_sq] == NO_PIECE) {
-        std::cout << "Error, attempting to call make_move function with empty square" << std::endl;
-        std::cout << move_code << std::endl;
-        return;
-    }
-
-    else if (colorOf(board_state.board[from_sq]) != sideToMove) {
-        std::cout << "Error, attempting to call make_move function with a piece of the opposite turn" << std::endl;
-        std::cout << "From sq: " << from_sq << std::endl;
-        std::cout << "To sq: " << static_cast<int>(move_code & 0b111111U) << std::endl;
-        std::cout << "Side To move: " << (sideToMove == WHITE ? "White" : "Black") << std::endl;
-        return;
-    }
-
-    int to_sq = (move_code & 0b111111U);
+    int from_sq = (move_code >> 6) & 0b111111U;
+    int to_sq = move_code & 0b111111U;
     MoveType move_type = static_cast<MoveType>(move_code >> 12);
-
-    Piece captured_piece = NO_PIECE;
-    int new_ep_sq = NO_SQ;
-
-    switch (move_type)
-    {
-    case MOVE: {
-        // oportunity for en-passant can only be given with pawn moving two squares
-        if (
-            getType(from_sq) == PAWN && // piece is a pawn
-            std::abs(from_sq - to_sq) == 16 // and moved two steps
-        ) new_ep_sq = sideToMove ? (to_sq - 8) : (to_sq + 8);
-
-        board_state.movePiece(from_sq, to_sq);
-        break;
-    }
-    case CAPTURE: {
-        captured_piece = board_state.deletePiece(to_sq);
-        board_state.movePiece(from_sq, to_sq);
-        break;
-    }
-    case CASTLING:
-        make_castling(from_sq, to_sq);
-        break;
-
-    case EN_PASSANT: {
-        int enemy_pawn_sq = sideToMove ? (to_sq - 8) : (to_sq + 8);
-        captured_piece = board_state.deletePiece(enemy_pawn_sq);
-        board_state.movePiece(from_sq, to_sq);
-        break;
-        }
-    case PROMOTION: {
-        board_state.movePiece(from_sq, to_sq);
-        promotion_sq = to_sq;
-        break;
-    }
-    case PROMOTION_CAPTURE: {
-        captured_piece = board_state.deletePiece(to_sq);
-        board_state.movePiece(from_sq, to_sq);
-        promotion_sq = to_sq;
-        break;
-    }
-    default:
-        std::cout << "Error, calling make_move function with an undefined move type" << std::endl;
+    
+    // Input validation
+    if (board_state.piece_at(from_sq) == NO_PIECE) {
+        std::cout << "Error, attempting to call make_move function with empty square" << std::endl;
+        std::cout << "Move code: " << move_code << std::endl;
         return;
-        break;
+    }
+    
+    if (colorOf(board_state.piece_at(from_sq)) != sideToMove) {
+        std::cout << "Error, attempting to call make_move function with a piece of the opposite turn" << std::endl;
+        std::cout << "From sq: " << from_sq << ", To sq: " << to_sq << std::endl;
+        std::cout << "Side to move: " << (sideToMove == WHITE ? "White" : "Black") << std::endl;
+        return;
+    }
+
+    Piece moving_piece = board_state.piece_at(from_sq);
+    Piece captured_piece = NO_PIECE;
+    int8_t new_ep_sq = NO_SQ;
+
+    // Store current state for undo
+    UndoInfo undo_info = {
+        move_code, 
+        NO_PIECE,  // Will be set if there's a capture
+        en_passant_sq, 
+        castling_rights
     };
 
-    UndoInfo new_stored_move = {
-        move_code, captured_piece, en_passant_sq, castling_rights
-    };
-    undo_stack[ply] = new_stored_move;
+    // Execute move based on type
+    switch (move_type) {
+        case MOVE: {
+            // Check for double pawn push (creates en passant opportunity)
+            if (board_state.getType(moving_piece) == PAWN && 
+                std::abs(from_sq - to_sq) == 16) {
+                new_ep_sq = sideToMove == WHITE ? (to_sq - 8) : (to_sq + 8);
+            }
+            board_state.movePiece(from_sq, to_sq);
+            break;
+        }
+        
+        case CAPTURE: {
+            captured_piece = board_state.piece_at(to_sq);
+            board_state.deletePiece(to_sq);
+            board_state.movePiece(from_sq, to_sq);
+            undo_info.captured_piece = captured_piece;
+            break;
+        }
+        
+        case CASTLING: {
+            board_state.castling(from_sq, to_sq);
+            break;
+        }
+        
+        case EN_PASSANT: {
+            int captured_pawn_sq = sideToMove == WHITE ? (to_sq - 8) : (to_sq + 8);
+            captured_piece = board_state.piece_at(captured_pawn_sq);
+            board_state.deletePiece(captured_pawn_sq);
+            board_state.movePiece(from_sq, to_sq);
+            undo_info.captured_piece = captured_piece;
+            break;
+        }
+        
+        case PROMOTION: {
+            board_state.movePiece(from_sq, to_sq);
+            promotion_sq = to_sq;
+            break;
+        }
+        
+        case PROMOTION_CAPTURE: {
+            captured_piece = board_state.piece_at(to_sq);
+            board_state.deletePiece(to_sq);
+            board_state.movePiece(from_sq, to_sq);
+            promotion_sq = to_sq;
+            undo_info.captured_piece = captured_piece;
+            break;
+        }
+        
+        default: {
+            std::cout << "Error, calling make_move function with an undefined move type: " 
+                      << static_cast<int>(move_type) << std::endl;
+            return;
+        }
+    }
 
+    // Update game state
+    undo_stack[ply] = undo_info;
     en_passant_sq = new_ep_sq;
     update_castling_rights(to_sq);
 }
 
 
 void Game::unmake_move() {
-    UndoInfo last_stored_move = undo_stack[ply];
-    uint16_t move_code = last_stored_move.move_code;
-    
-    int to_sq = (move_code & 0b111111U);
-
-    if (board_state.board[to_sq] == NO_PIECE) {
-        std::cout << "Unmake Move Error, attempting to call function with empty square" << std::endl;
-        std::cout << move_code << std::endl;
+    if (ply == 0) {
+        std::cout << "Error, attempting to unmake move when no moves have been made" << std::endl;
         return;
     }
+
+    UndoInfo undo_info = undo_stack[ply - 1];  // Use ply-1 since we haven't decremented yet
+    uint16_t move_code = undo_info.move_code;
     
-    int from_sq = ((move_code >> 6) & 0b111111U);
+    int from_sq = (move_code >> 6) & 0b111111U;
+    int to_sq = move_code & 0b111111U;
     MoveType move_type = static_cast<MoveType>(move_code >> 12);
-
-    switch (move_type)
-    {
-    case MOVE:
-        board_state.movePiece(to_sq, from_sq);
-        break;
     
-    case CAPTURE:
-        board_state.movePiece(to_sq, from_sq);
-        board_state.addPiece(to_sq, last_stored_move.captured_piece);
-        break;
-
-    case CASTLING:
-        make_castling(from_sq, to_sq, true);
-        break;
-
-    case EN_PASSANT: {
-        int enemy_pawn_sq = sideToMove ? (to_sq - 8) : (to_sq + 8);
-        board_state.movePiece(to_sq, from_sq);
-        board_state.addPiece(enemy_pawn_sq, last_stored_move.captured_piece);
-        break;
-    }
-    case PROMOTION: {
-        board_state.deletePiece(to_sq);
-        Piece ally_pawn = static_cast<Piece>(PAWN + (sideToMove * PC_NUM));
-        board_state.addPiece(from_sq, ally_pawn);
-        break;
-    }
-    case PROMOTION_CAPTURE: {
-        board_state.deletePiece(to_sq);
-        board_state.addPiece(to_sq, last_stored_move.captured_piece);
-
-        Piece ally_pawn = static_cast<Piece>(PAWN + (sideToMove * PC_NUM));
-        board_state.addPiece(from_sq, ally_pawn);
-        break;
-    }
-    default:
-        std::cout << "Unmake Move Error, attempting to call function with undefined move type" << std::endl;
+    // Input validation
+    if (board_state.piece_at(to_sq) == NO_PIECE && 
+        move_type != CASTLING && move_type != EN_PASSANT) {
+        std::cout << "Error, attempting to call unmake_move function with empty destination square" << std::endl;
+        std::cout << "Move code: " << move_code << std::endl;
         return;
-        break;
-    };
+    }
 
-    castling_rights = last_stored_move.prev_castling_rights;
-    en_passant_sq = last_stored_move.prev_en_passant_sq;
+    // Restore move based on type (reverse of make_move)
+    switch (move_type) {
+        case MOVE: {
+            board_state.movePiece(to_sq, from_sq);
+            break;
+        }
+        
+        case CAPTURE: {
+            board_state.movePiece(to_sq, from_sq);
+            board_state.addPiece(to_sq, undo_info.captured_piece);
+            break;
+        }
+        
+        case CASTLING: {
+            board_state.castling(from_sq, to_sq, true);  // reverse = true
+            break;
+        }
+        
+        case EN_PASSANT: {
+            int captured_pawn_sq = sideToMove == WHITE ? (to_sq - 8) : (to_sq + 8);
+            board_state.movePiece(to_sq, from_sq);
+            board_state.addPiece(captured_pawn_sq, undo_info.captured_piece);
+            break;
+        }
+        
+        case PROMOTION: {
+            board_state.deletePiece(to_sq);
+            Piece original_pawn = static_cast<Piece>(PAWN + (sideToMove * PC_NUM));
+            board_state.addPiece(from_sq, original_pawn);
+            break;
+        }
+        
+        case PROMOTION_CAPTURE: {
+            board_state.deletePiece(to_sq);
+            board_state.addPiece(to_sq, undo_info.captured_piece);
+            Piece original_pawn = static_cast<Piece>(PAWN + (sideToMove * PC_NUM));
+            board_state.addPiece(from_sq, original_pawn);
+            break;
+        }
+        
+        default: {
+            std::cout << "Error, attempting to call unmake_move function with undefined move type: " 
+                      << static_cast<int>(move_type) << std::endl;
+            return;
+        }
+    }
+
+    // Restore game state
+    castling_rights = undo_info.prev_castling_rights;
+    en_passant_sq = undo_info.prev_en_passant_sq;
     promotion_sq = NO_SQ;
 }

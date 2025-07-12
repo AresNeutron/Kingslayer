@@ -1,201 +1,245 @@
 #include "Game.h"
-#include <cstdint>
-#include <vector>
-#include <iostream>
 
-
-uint64_t Game::get_pseudo_legal_moves(int from_sq) {
-    Piece pc = board_state.board[from_sq]; // 0-11
-
-    uint64_t occupied = board_state.occupied_bb;
-
-    uint64_t friendly = board_state.colors_bb_array[sideToMove];
-
-    Type type = getType(from_sq);
-
-    uint64_t moves = 0;
-
-    switch (type) {
-        case KNIGHT:
-            moves = knight_lookup[from_sq];
-            break;
-        case KING:
-            moves = king_lookup[from_sq];
-            break;
-        case PAWN: {
-            uint64_t p_moves = (colorOf(pc) ? white_pawn_moves_lookup[from_sq] : black_pawn_moves_lookup[from_sq]) & ~occupied;
-            uint64_t p_attacks = (colorOf(pc) ? white_pawn_attacks_lookup[from_sq] : black_pawn_attacks_lookup[from_sq]) & occupied;
-
-            // Obstáculo directo frente al peón
-            if ((pc == WHITE_PAWN && (occupied >> (from_sq + 8)) & 1) ||
-                (pc == BLACK_PAWN && (occupied >> (from_sq - 8)) & 1)) {
-                p_moves = 0;
-            }
-
-            moves = p_moves | p_attacks;
-            break;
-        }
-        case ROOK: {
-            uint64_t mask = rook_masks[from_sq];
-            uint64_t occupied_mask = occupied & mask;
-            uint64_t magic_index = (occupied_mask * ROOK_MAGICS[from_sq]) >> rook_magic_shifts[from_sq];
-            moves = rook_magic_attack_table[rook_magic_offsets[from_sq] + magic_index];
-            break;
-        }
-        case BISHOP: {
-            uint64_t mask = bishop_masks[from_sq];
-            uint64_t occupied_mask = occupied & mask;
-            uint64_t magic_index = (occupied_mask * BISHOP_MAGICS[from_sq]) >> bishop_magic_shifts[from_sq];
-            moves = bishop_magic_attack_table[bishop_magic_offsets[from_sq] + magic_index];
-            break;
-        }
-        case QUEEN: {
-            uint64_t rook_mask = rook_masks[from_sq];
-            uint64_t occupied_for_rook = occupied & rook_mask;
-            uint64_t rook_magic_index = (occupied_for_rook * ROOK_MAGICS[from_sq]) >> rook_magic_shifts[from_sq];
-            uint64_t rook_moves = rook_magic_attack_table[rook_magic_offsets[from_sq] + rook_magic_index];
-
-            uint64_t bishop_mask = bishop_masks[from_sq];
-            uint64_t occupied_for_bishop = occupied & bishop_mask;
-            uint64_t bishop_magic_index = (occupied_for_bishop * BISHOP_MAGICS[from_sq]) >> bishop_magic_shifts[from_sq];
-            uint64_t bishop_moves = bishop_magic_attack_table[bishop_magic_offsets[from_sq] + bishop_magic_index];
-
-            moves = rook_moves | bishop_moves;
-            break;
-        }
+std::vector<uint16_t> Game::get_legal_moves(int from_sq) {
+    // Input validation
+    if (from_sq < 0 || from_sq > 63) {
+        std::cout << "Error, calling get_legal_moves with square number out of range" << std::endl;
+        return {};
     }
 
-    return moves & ~friendly;
-};
-
-
-int Game::get_legal_moves(int from_sq) {
-    if (!(0 <= from_sq <= 63)) {
-        std::cout << "Llamando función de obtener movimientos con número fuera del rango de escaques" << std::endl;
-        return 0;
+    Piece piece = board_state.piece_at(from_sq);
+    if (piece == NO_PIECE) {
+        std::cout << "Error, calling get_legal_moves with an empty square" << std::endl;
+        return {};
     }
 
-    if (board_state.board[from_sq] == NO_PIECE) {
-        std::cout << "Llamando función de obtener movimientos con un escaque vacío" << std::endl;
-        return 0;
-    }
-
-    else if (colorOf(board_state.board[from_sq]) != sideToMove) {
+    if (colorOf(piece) != sideToMove) {
         std::cout << "Error, attempting to call get_legal_moves function with a piece of the opposite turn" << std::endl;
-        return 0;
+        return {};
     }
 
-    uint64_t pl_moves = get_pseudo_legal_moves(from_sq);
-    int captured_en_passant_pawn = NO_SQ;
+    // Get pseudo-legal moves
+    uint64_t pseudo_moves = board_state.getPseudoLegalMoves(from_sq);
     
-    // Variables to be used in the loop
-    uint64_t enemy_bb = board_state.colors_bb_array[1 - sideToMove];
-    bool isKing = getType(from_sq) == KING;
-    bool isPawn = getType(from_sq) == PAWN;
+    // Early exit if no pseudo-legal moves
+    if (pseudo_moves == 0) { return {}; }
 
-    int king_sq = __builtin_ctzll(board_state.types_bb_array[KING + PC_NUM * sideToMove]);
-    uint64_t king_attackers = board_state.get_attackers_for_sq(sideToMove, king_sq);
+    // Initialize counters
+    high_priority_count = 0;
+    medium_priority_count = 0;
+    low_priority_count = 0;
 
-    int numAttackers = __builtin_popcountll(king_attackers);
+    Type piece_type = board_state.getType(piece);
+    bool is_king = (piece_type == KING);
+    bool is_pawn = (piece_type == PAWN);
 
-    // variables for check filtering
-    bool isPinned = (pinned_rays[from_sq] != 0);
-    uint64_t pin_ray = pinned_rays[from_sq];
+    // Get king position and check status
+    int king_sq = __builtin_ctzll(board_state.king(sideToMove));
+    uint64_t king_attackers = board_state.getAttackersForSq(sideToMove, king_sq);
+    int num_attackers = __builtin_popcountll(king_attackers);
 
-    // if the king is attacked by only one enemy, you can only move to:
-    int enemy_sq = numAttackers == 1 ? __builtin_ctzll(king_attackers) : NO_SQ;
-    int enemy_piece = (enemy_sq != NO_SQ) ? board_state.board[enemy_sq] : NO_PIECE;
-
-    // To capture the attacker
-    uint64_t allowed_moves = numAttackers == 1 ? king_attackers : 0;
-
-    if (
-        enemy_piece == (BISHOP + PC_NUM * (1 - sideToMove)) ||
-        enemy_piece == (ROOK + PC_NUM * (1 - sideToMove)) ||
-        enemy_piece == (QUEEN + PC_NUM * (1 - sideToMove))
-    ) {
-        // To put a piece between the king and the attacker, only if its a bishop, rook or queen
-        allowed_moves |= board_state.get_ray_between(sideToMove, enemy_sq);
+    // Add en passant moves
+    if (is_pawn && en_passant_sq != NO_SQ) {
+        pseudo_moves |= get_en_passant_bb(from_sq);
     }
 
-    // Variable to count the moves
-    int moveCount = 0;
+    // Calculate allowed destination squares in check
+    uint64_t allowed_moves = calculate_allowed_moves_in_check(king_attackers, num_attackers);
 
-    // add en_passant before the loop, we have to check out its legality
-    if (isPawn) pl_moves |= get_en_passant_bb(from_sq);
-    
+    int move_count = 0;
+    uint64_t enemy_bb = board_state.color_bb(static_cast<Color>(1 - sideToMove));
 
-    while (pl_moves) {
-        int to_sq = __builtin_ctzll(pl_moves);
-        uint64_t lsb_bit = pl_moves & -pl_moves;
+    // Process each pseudo-legal move
+    while (pseudo_moves) {
+        int to_sq = __builtin_ctzll(pseudo_moves);
+        uint64_t to_sq_bb = 1ULL << to_sq;
+        pseudo_moves &= pseudo_moves - 1; // Remove LSB
 
-        pl_moves &= pl_moves - 1;
-        MoveType flag = (enemy_bb & lsb_bit) ? CAPTURE : MOVE;
-
-        // case of the king: add castling if posible, and filter attacked squares
-        if (isKing) {
-            // if "to_sq" is under attack, discard that move
-            if (board_state.get_attackers_for_sq(sideToMove, to_sq) != 0) continue;
-                
-            uint16_t move_code = (flag << 12) | (from_sq << 6) | to_sq;
-            movesArray[moveCount] = move_code;
-            moveCount++;
-            
+        // Skip if move is illegal
+        if (!is_legal_move(from_sq, to_sq, piece, king_sq, num_attackers, allowed_moves, enemy_bb)) {
+            continue;
         }
 
-        // case of non-king pieces
+        // Determine move type and add to array
+        MoveType move_type = get_move_type(from_sq, to_sq, piece, enemy_bb, to_sq_bb);
+        uint16_t move_code = static_cast<uint16_t>((move_type << 12) | (from_sq << 6) | to_sq);
+        prioritize_and_store_move(move_code);
+    }
+
+    // Handle castling for kings
+    if (is_king && num_attackers == 0) {
+        add_castling_moves(from_sq);
+    }
+
+    // Combine moves by priority
+    std::vector<uint16_t> ordered_moves;
+    ordered_moves.reserve(high_priority_count + medium_priority_count + low_priority_count);
+
+    ordered_moves.insert(ordered_moves.end(), high_priority_moves.begin(), high_priority_moves.begin() + high_priority_count);
+    ordered_moves.insert(ordered_moves.end(), medium_priority_moves.begin(), medium_priority_moves.begin() + medium_priority_count);
+    ordered_moves.insert(ordered_moves.end(), low_priority_moves.begin(), low_priority_moves.begin() + low_priority_count);
+
+    return ordered_moves;
+}
+
+// Calculate allowed moves when in check
+uint64_t Game::calculate_allowed_moves_in_check(uint64_t king_attackers, int num_attackers) {
+    if (num_attackers == 0) return ~0ULL; // No check
+    if (num_attackers > 1) return 0ULL;   // Double check
+
+    // Single check
+    int enemy_sq = __builtin_ctzll(king_attackers);
+    Piece enemy_piece = board_state.piece_at(enemy_sq);
+    Type enemy_type = board_state.getType(enemy_piece);
+    
+    uint64_t allowed = king_attackers; // Capture attacker
+
+    // Block sliding pieces
+    if (enemy_type == BISHOP || enemy_type == ROOK || enemy_type == QUEEN) {
+        allowed |= board_state.getRayBetween(sideToMove, enemy_sq);
+    }
+
+    return allowed;
+}
+
+// Check if a move is legal
+bool Game::is_legal_move(int from_sq, int to_sq, Piece piece, int king_sq, 
+                        int num_attackers, uint64_t allowed_moves, uint64_t enemy_bb) {
+    Type piece_type = board_state.getType(piece);
+    bool is_king = (piece_type == KING);
+    uint64_t to_sq_bb = 1ULL << to_sq;
+
+    // King moves: check if destination is attacked
+    if (is_king) {
+        return board_state.getAttackersForSq(sideToMove, to_sq) == 0;
+    }
+
+    // Non-king in double check cannot move
+    if (num_attackers > 1) {
+        return false;
+    }
+
+    // Check if move is on allowed squares in single check
+    if (num_attackers == 1) {
+        // En passant special case
+        if (to_sq == en_passant_sq && piece_type == PAWN) {
+            int captured_pawn_sq = sideToMove ? (to_sq - 8) : (to_sq + 8);
+            uint64_t king_attackers = board_state.getAttackersForSq(sideToMove, king_sq);
+            int attacker_sq = __builtin_ctzll(king_attackers);
+            return (captured_pawn_sq == attacker_sq);
+        }
+        
+        return (allowed_moves & to_sq_bb) != 0;
+    }
+
+    // Check pinned pieces
+    if (pinned_rays[from_sq] != 0) {
+        return (pinned_rays[from_sq] & to_sq_bb) != 0;
+    }
+
+    return true;
+}
+
+// Determine move type
+MoveType Game::get_move_type(int from_sq, int to_sq, Piece piece, uint64_t enemy_bb, uint64_t to_sq_bb) {
+    Type piece_type = board_state.getType(piece);
+    bool is_capture = (enemy_bb & to_sq_bb) != 0;
+    
+    // En passant
+    if (piece_type == PAWN && to_sq == en_passant_sq) {
+        return EN_PASSANT;
+    }
+    
+    // Promotion
+    if (piece_type == PAWN && ((PROMOTION_ROWS[sideToMove] >> to_sq) & 1ULL)) {
+        return is_capture ? PROMOTION_CAPTURE : PROMOTION;
+    }
+    
+    // Regular move or capture
+    return is_capture ? CAPTURE : MOVE;
+}
+
+// Add castling moves
+void Game::add_castling_moves(int from_sq) {
+    std::array<uint16_t, 2> castling_moves = get_castling_move(from_sq);
+    for (int i = 0; i < 2; ++i) {
+        if (castling_moves[i] != 0) {
+            medium_priority_moves[medium_priority_count] = castling_moves[i];
+            medium_priority_count++;
+        }
+    }
+}
+
+bool Game::would_be_check(uint16_t move_code) {
+    // Data
+    Color enemy_side = static_cast<Color>(1 - sideToMove);
+    int enemy_king_sq = __builtin_ctzll(board_state.king(enemy_side));
+
+    // Decompress move
+    int from = (move_code >> 6) & 0b111111U;
+    int to = move_code & 0b111111U;
+    MoveType type = static_cast<MoveType>(move_code >> 12);
+
+    bool is_check = false;
+    bool is_capture = type == CAPTURE || type == PROMOTION_CAPTURE;
+    Piece enemy = NO_PIECE;
+
+    // Simulate move
+    if (is_capture) Piece enemy = board_state.deletePiece(to);
+    board_state.movePiece(from, to);
+
+    // Verify check
+    is_check = board_state.getAttackersForSq(enemy_side, enemy_king_sq) > 0;
+
+    // Reverse move
+    board_state.movePiece(to, from);
+    if (is_capture) board_state.addPiece(to, enemy);
+
+    return is_check;
+}
+
+void Game::prioritize_and_store_move(uint16_t move_code) {
+    // High priority: checks
+    if (would_be_check(move_code)) {
+        high_priority_moves[high_priority_count++] = move_code;
+        return;
+    }
+
+    MoveType type = static_cast<MoveType>(move_code >> 12);
+
+    // Medium priority: promotions
+    if (type == PROMOTION || type == PROMOTION_CAPTURE) {
+        medium_priority_moves[medium_priority_count++] = move_code;
+        return;
+    }
+
+    // Evaluate captures
+    if (type == CAPTURE) {
+        int from_sq = (move_code >> 6) & 0x3F;
+        Piece attacker_piece = board_state.piece_at(from_sq);
+        Type attacker_type = board_state.getType(attacker_piece);
+
+        int to_sq = move_code & 0x3F;
+        Piece victim_piece = board_state.piece_at(to_sq);
+        Type victim_type = board_state.getType(victim_piece);
+
+        // Good capture: high priority
+        if (PIECE_BASE_VALUE[victim_type] >= PIECE_BASE_VALUE[attacker_type]) {
+            high_priority_moves[high_priority_count++] = move_code;
+        }
+        // Bad capture: low priority
         else {
-            // case for promotion: "to_sq" is in the edge
-            if (isPawn && ((PROMOTION_ROWS[sideToMove] >> to_sq) & 1ULL)) {
-                flag = (flag == CAPTURE) ? PROMOTION_CAPTURE : PROMOTION;
-            }
-
-            // case for en-passant, "to_sq" is equal to "en_passant_sq"
-            if (isPawn && to_sq == en_passant_sq) {
-                flag = EN_PASSANT;
-                captured_en_passant_pawn = sideToMove ? (to_sq - 8) : (to_sq + 8);
-            }
-            
-            // Now, begins the filter
-            switch (numAttackers)
-            {
-            // king is not in check
-            case 0:
-                if (isPinned && !((pin_ray >> to_sq) & 1ULL)) continue; // filter pinned moved
-                break;
-            // king is in check: one attacker
-            case 1:
-                if (
-                    flag == EN_PASSANT &&
-                    captured_en_passant_pawn == enemy_sq && 
-                    enemy_piece == PAWN + PC_NUM * (1 - sideToMove)
-                    ) break;
-
-                else if (!((allowed_moves>>to_sq)&1)) continue;
-                break;
-            // king is in check: more than one attacker
-            default:
-                continue; // only king can move
-                break;
-            }
-
-            uint16_t move_code = static_cast<uint16_t>((flag << 12) | (from_sq << 6) | to_sq);
-            movesArray[moveCount] = move_code;
-            moveCount++;
+            low_priority_moves[low_priority_count++] = move_code;
         }
+        return;
+    }
+    
+    // Low priority: en passant
+    if (type == EN_PASSANT) {
+        low_priority_moves[low_priority_count++] = move_code;
+        return;
     }
 
-    // handle castling after the loop, it automatically ensures check detection
-    if (isKing) {
-        std::array<uint16_t, 2> castling_moves = get_castling_move(from_sq);
-
-        for (int i=0; i < 2; ++i) {
-            if (castling_moves[i]) {
-                movesArray[moveCount] = castling_moves[i];
-                moveCount++;
-            }
-        }
-    }
-
-    return moveCount;
+    // Low priority: quiet moves
+    low_priority_moves[low_priority_count++] = move_code;
 }

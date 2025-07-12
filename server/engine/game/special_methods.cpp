@@ -2,9 +2,6 @@
 #include <cstdlib>
 #include <array>
 
-const uint64_t WHITE_EN_PASSANT_TRACK = 0x000000FF00000000ULL; // Fila 4 para peones blancos
-const uint64_t BLACK_EN_PASSANT_TRACK = 0x00000000FF000000ULL; // Fila 5 para peones negros
-
 uint64_t Game::get_en_passant_bb(int from_sq) const {
     uint64_t current_track = sideToMove ? WHITE_EN_PASSANT_TRACK : BLACK_EN_PASSANT_TRACK;
     
@@ -30,17 +27,6 @@ uint64_t Game::get_en_passant_bb(int from_sq) const {
 }
 
 
-std::array<int, 2> getCastlingPath(int rook_square) {
-    switch (rook_square) {
-        case 0:  return {2, 3}; // Torre en 0 para flanco de dama blanco
-        case 7:  return {5, 6}; // Torre en 7 para flanco de rey blanco
-        case 56: return {58, 59}; // Torre en 56 para flanco de dama negro
-        case 63: return {61, 62}; // Torre en 63 para flanco de rey negro
-    }
-    return {NO_SQ, NO_SQ};
-}
-
-
 std::array<uint16_t, 2> Game::get_castling_move(int king_sq) const {
     uint8_t right_of_king_to_castle = sideToMove ? 0b0011U : 0b1100U;
 
@@ -48,7 +34,7 @@ std::array<uint16_t, 2> Game::get_castling_move(int king_sq) const {
         return {0U,0U};
     }
 
-    uint64_t occupied_bb = board_state.occupied_bb;
+    uint64_t occupied_bb = board_state.occupied();
     std::array<uint16_t, 2> castling_moves = {0U,0U};
 
     int q_rook_sq = sideToMove ? 0 : 56;
@@ -69,7 +55,7 @@ std::array<uint16_t, 2> Game::get_castling_move(int king_sq) const {
 
         // early exit if rook has already moved or if doesn't exists
         if (!((castling_rights >> castling_idx) & 1U) ||
-            board_state.board[rook_sq] != rook_idx) {
+            board_state.piece_at(rook_sq) != rook_idx) {
             continue;
         }
         
@@ -78,12 +64,12 @@ std::array<uint16_t, 2> Game::get_castling_move(int king_sq) const {
 
         bool is_path_clear = (castling_mask & occupied_bb) == 0;
 
-        bool is_king_safe = board_state.get_attackers_for_sq(sideToMove, king_sq) == 0;
+        bool is_king_safe = board_state.getAttackersForSq(sideToMove, king_sq) == 0;
 
         bool is_path_safe = true;
 
         for (int path_sq : castling_squares) {
-            if (board_state.get_attackers_for_sq(sideToMove, path_sq) != 0ULL) {
+            if (board_state.getAttackersForSq(sideToMove, path_sq) != 0ULL) {
                 is_path_safe = false;
                 break;
             }
@@ -103,17 +89,17 @@ std::array<uint16_t, 2> Game::get_castling_move(int king_sq) const {
 void Game::set_pinned_pieces() {
     pinned_rays.fill(0ULL);
 
-    std::vector<int> threats = board_state.get_linear_threats(sideToMove);
+    uint64_t threats = board_state.getLinearThreats(sideToMove);
 
-    for (int threat_sq : threats) {
-        uint64_t ray = board_state.get_ray_between(sideToMove, threat_sq);
+    FOR_EACH_SET_BIT(threats, threatSq) {
+        uint64_t ray = board_state.getRayBetween(sideToMove, threatSq);
 
-        uint64_t intersection = ray & board_state.colors_bb_array[sideToMove];
+        uint64_t intersection = ray & board_state.color_bb(sideToMove);
 
         if (__builtin_popcountll(intersection) == 1) {
             int pinned_sq = __builtin_ctzll(intersection);
 
-            pinned_rays[pinned_sq] = ray | (1ULL << threat_sq);
+            pinned_rays[pinned_sq] = ray | (1ULL << threatSq);
         }
     }
 }
