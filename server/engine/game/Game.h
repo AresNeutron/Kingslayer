@@ -55,7 +55,6 @@ private:
     // GAME STATE MANAGEMENT
     // =========================
     void update_castling_rights(int to_sq);
-    void make_promotion(Type promotion = QUEEN);
 
 public:
     // =========================
@@ -76,9 +75,12 @@ public:
     // =========================
     // BASIC GAME CONTROL
     // =========================
-    inline void changeTurn() { 
-        sideToMove = Color(1 - sideToMove);
-    }
+    inline void changeTurn() noexcept { sideToMove = Color(1 - sideToMove); }
+    inline void increase_ply() noexcept { ply++; }
+    inline void decrease_ply() noexcept { ply--; }
+    inline BoardState get_board_state() const noexcept { return board_state; }
+    inline GameEvent get_game_event() const noexcept { return game_event; }
+    inline Color get_side_to_move() const noexcept { return sideToMove; }
 
     // =========================
     // MOVE GENERATION & EXECUTION
@@ -91,7 +93,7 @@ public:
     // GAME STATE ANALYSIS
     // =========================
     uint64_t detect_check();
-    void detect_game_over(uint64_t threats);
+    bool detect_game_over();
 
     // =========================P
     // USER INTERFACE METHODS

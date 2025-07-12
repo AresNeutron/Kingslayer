@@ -99,3 +99,17 @@ void BoardState::castling(int from_sq, int to_sq, bool reverse) {
         movePiece(rook_from, rook_to);
     }
 }
+
+
+void BoardState::promote(int promotion_sq, Type promotion) { // promotes to queen by default
+    Piece pc = piece_at(promotion_sq);
+    Type type = getType(pc);
+    Color color = colorOf(pc);
+
+    if (type != PAWN || !((PROMOTION_ROWS[color] >> promotion_sq) & 1ULL)) return;
+
+    deletePiece(promotion_sq);
+
+    Piece promotion_pc = static_cast<Piece>(color * PC_NUM + promotion);
+    addPiece(promotion_sq, promotion_pc);
+}

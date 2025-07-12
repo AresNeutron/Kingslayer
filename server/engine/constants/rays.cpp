@@ -4,8 +4,6 @@
 std::array<std::array<uint64_t, 64>, 64> ray_between_table;
 
 void init_ray_tables() {
-    std::cout << "Calling ray tables function" << std::endl;
-
     // Precompute rays between all square pairs
     for (int sq1 = 0; sq1 < 64; ++sq1) {
         for (int sq2 = 0; sq2 < 64; ++sq2) {

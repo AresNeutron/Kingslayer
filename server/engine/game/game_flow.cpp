@@ -34,7 +34,8 @@ void Game::engine_moves(Color engine_color) {
     make_move(best);
     
     if (promotion_sq != NO_SQ) {
-        make_promotion(); // promote to queen by default
+        board_state.promote(promotion_sq); // promote to queen by default
+        promotion_sq = NO_SQ;
     }
 
     changeTurn();
@@ -56,7 +57,8 @@ void Game::resolve_promotion(char input) {
         case 'k': ptype = KNIGHT;  break;
         case 'q': default:         break;
     }
-    make_promotion(ptype);
+    board_state.promote(promotion_sq, ptype);
+    promotion_sq = NO_SQ;
     
     changeTurn();
     

@@ -77,6 +77,7 @@ public:
 
     uint64_t getPseudoLegalMoves(int fromSq) const;
     void castling(int from_sq, int to_sq, bool reverse = false );
+    void promote(int promotion_sq, Type promotion = QUEEN);
 
     // =========================
     // ATTACK & THREAT QUERIES
@@ -95,7 +96,4 @@ public:
             std::cout << static_cast<int>(board[i]) << std::endl;
         }
     }
-
-    // Debug only function
-    static void print_bitboard(uint64_t bitboard);
 };
