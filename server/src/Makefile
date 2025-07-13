@@ -12,7 +12,7 @@ SRCS = \
     game/game_flow.cpp \
     game/special_methods.cpp \
     constants/rays.cpp \
-    search/search.cpp
+    search/search.cpp \
     precomputed_moves/non_sliding_moves/king_knight.cpp \
     precomputed_moves/non_sliding_moves/pawn.cpp \
     precomputed_moves/sliding_moves/masks_blockers.cpp \
@@ -20,8 +20,8 @@ SRCS = \
 
 OBJS = $(SRCS:.cpp=.o)
 
-engine: $(OBJS)
+test: $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
 clean:
-	rm -f $(OBJS) engine
+	rm -f $(OBJS) test

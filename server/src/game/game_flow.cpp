@@ -12,7 +12,7 @@ void Game::user_moves(uint16_t move_code) {
 
         // these detectors can only be called in own turn
         uint64_t threats = detect_check();
-        detect_game_over(threats);
+        detect_game_over();
 
         std::cout << threats << std::endl;
         std::cout << eventMessages[game_event] << std::endl;
@@ -21,32 +21,32 @@ void Game::user_moves(uint16_t move_code) {
 }
 
 
-void Game::engine_moves(Color engine_color) {
-    if (engine_color != sideToMove) {
-        std::cout << "Error, attempting to move engine in opposite turn\n";
-        std::cout << "error" << std::endl;
-        return;
-    }
+// void Game::engine_moves(Color engine_color) {
+//     if (engine_color != sideToMove) {
+//         std::cout << "Error, attempting to move engine in opposite turn\n";
+//         std::cout << "error" << std::endl;
+//         return;
+//     }
 
-    // Depth of 1, no recursion by now, it's not ready
-    uint16_t best = find_best_move(1, engine_color == 1);
+//     // Depth of 1, no recursion by now, it's not ready
+//     uint16_t best = find_best_move(1, engine_color == 1);
 
-    make_move(best);
+//     make_move(best);
     
-    if (promotion_sq != NO_SQ) {
-        board_state.promote(promotion_sq); // promote to queen by default
-        promotion_sq = NO_SQ;
-    }
+//     if (promotion_sq != NO_SQ) {
+//         board_state.promote(promotion_sq); // promote to queen by default
+//         promotion_sq = NO_SQ;
+//     }
 
-    changeTurn();
+//     changeTurn();
 
-    uint64_t threats = detect_check();
-    detect_game_over(threats);
+//     uint64_t threats = detect_check();
+//     detect_game_over(threats);
 
-    std::cout << threats << std::endl;
-    std::cout << eventMessages[game_event] << std::endl;
-    std::cout << "readyok\n";
-}
+//     std::cout << threats << std::endl;
+//     std::cout << eventMessages[game_event] << std::endl;
+//     std::cout << "readyok\n";
+// }
 
 
 void Game::resolve_promotion(char input) {
@@ -63,7 +63,7 @@ void Game::resolve_promotion(char input) {
     changeTurn();
     
     uint64_t threats = detect_check();
-    detect_game_over(threats);
+    detect_game_over();
 
     std::cout << threats << std::endl;
     std::cout << eventMessages[game_event] << std::endl;

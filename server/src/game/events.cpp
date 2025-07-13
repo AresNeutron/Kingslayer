@@ -35,7 +35,10 @@ bool Game::detect_game_over() {
 
     uint64_t friendly_bb = board_state.color_bb(sideToMove);
 
-    FOR_EACH_SET_BIT(friendly_bb, sq) {
+    while (friendly_bb) {
+        int sq = __builtin_ctzll(friendly_bb);
+        friendly_bb &= friendly_bb - 1;
+        
         std::vector<uint16_t> movesVector = get_legal_moves(sq);
         if (!movesVector.empty()) {
             return false; // No checkmate

@@ -54,7 +54,7 @@ enum GameEvent : uint8_t {
     CHECK = 1,
     CHECKMATE = 2,
     STALEMATE = 3,
-    PROMOTION = 4,
+    PROMOTION_EVENT = 4,
 };
 
 enum MoveType : uint8_t {

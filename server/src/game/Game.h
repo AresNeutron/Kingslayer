@@ -26,7 +26,7 @@ private:
     // SEARCH & MOVE DATA
     // =========================
     std::array<uint64_t, 64> pinned_rays;           // Ray for pinned pieces, 0 if not pinned
-    std::array<UndoInfo, MAX_DEPTH> undo_stack;     // Stack for move undo information
+    std::array<UndoInfo, 100> undo_stack;     // Stack for move undo information
    
     // three arrays to store different priority moves
     std::array<uint16_t, 8> high_priority_moves;
@@ -99,7 +99,7 @@ public:
     // USER INTERFACE METHODS
     // =========================
     void user_moves(uint16_t move_code);
-    void engine_moves(Color engine_color);
+    // void engine_moves(Color engine_color);
     void resolve_promotion(char input);
 };
 

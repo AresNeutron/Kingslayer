@@ -98,12 +98,7 @@ void Game::make_move(uint16_t move_code) {
 
 
 void Game::unmake_move() {
-    if (ply == 0) {
-        std::cout << "Error, attempting to unmake move when no moves have been made" << std::endl;
-        return;
-    }
-
-    UndoInfo undo_info = undo_stack[ply - 1];  // Use ply-1 since we haven't decremented yet
+    UndoInfo undo_info = undo_stack[ply];  // Use ply-1 since we haven't decremented yet
     uint16_t move_code = undo_info.move_code;
     
     int from_sq = (move_code >> 6) & 0b111111U;
@@ -111,8 +106,7 @@ void Game::unmake_move() {
     MoveType move_type = static_cast<MoveType>(move_code >> 12);
     
     // Input validation
-    if (board_state.piece_at(to_sq) == NO_PIECE && 
-        move_type != CASTLING && move_type != EN_PASSANT) {
+    if (board_state.piece_at(to_sq) == NO_PIECE ) {
         std::cout << "Error, attempting to call unmake_move function with empty destination square" << std::endl;
         std::cout << "Move code: " << move_code << std::endl;
         return;

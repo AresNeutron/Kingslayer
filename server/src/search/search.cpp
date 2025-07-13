@@ -18,7 +18,9 @@ uint16_t Search::find_best_move(Game& game, int depth) {
     uint64_t friendly_bb = game.get_board_state().color_bb(game.get_side_to_move());
     
     // Iterar sobre todas las piezas del jugador actual
-    FOR_EACH_SET_BIT(friendly_bb, from_sq) {
+    while (friendly_bb) {
+        int from_sq = __builtin_ctzll(friendly_bb);
+        friendly_bb &= friendly_bb - 1;
         // Obtener movimientos legales para esta pieza (ya ordenados por prioridad)
         std::vector<uint16_t> legal_moves = game.get_legal_moves(from_sq);
         
@@ -91,7 +93,9 @@ double Search::negamax(Game& game, int depth, double alpha, double beta) {
     uint64_t friendly_bb = game.get_board_state().color_bb(game.get_side_to_move());
     
     // Iterar sobre todas las piezas del jugador actual
-    FOR_EACH_SET_BIT(friendly_bb, from_sq) {
+    while (friendly_bb) {
+        int from_sq = __builtin_ctzll(friendly_bb);
+        friendly_bb &= friendly_bb - 1;
         // Obtener movimientos legales para esta pieza (ya ordenados por prioridad)
         std::vector<uint16_t> legal_moves = game.get_legal_moves(from_sq);
         

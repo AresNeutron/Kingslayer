@@ -2,7 +2,7 @@ import asyncio
 from typing import List, Optional, Tuple
 import time
 
-PATH = './engine/engine'
+PATH = './src/test'
 
 class GameManager:
     """

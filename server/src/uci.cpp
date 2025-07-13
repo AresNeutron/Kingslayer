@@ -9,7 +9,7 @@ Game game;
 
 enum class Command {
     UCINEWGAME, ENGINEMOVES, GETBOARD,
-    GETMOVES, USERMOVES, PROMOTE, QUIT, UNKNOWN
+    GETMOVES, USERMOVES, UNMAKE, PROMOTE, QUIT, UNKNOWN
 };
 
 Command obtain_command(const std::string& token) {
@@ -20,6 +20,7 @@ Command obtain_command(const std::string& token) {
         {"getmoves", Command::GETMOVES},
         {"promote", Command::PROMOTE},
         {"makemove", Command::USERMOVES},
+        {"unmake", Command::UNMAKE},
         {"quit", Command::QUIT}
     };
 
@@ -42,22 +43,23 @@ void uci_loop() {
                 std::cout << "readyok\n";
                 break;
 
+                // disabled by now
             case Command::ENGINEMOVES:{
-                int engine_color;
-                iss >> engine_color;
-                if (engine_color != 0 && engine_color != 1) {
-                    std::cout << "Invalid engine color in UCI\n";
-                    std::cout << "error" << std::endl;
-                    break;
-                }
+                // int engine_color;
+                // iss >> engine_color;
+                // if (engine_color != 0 && engine_color != 1) {
+                //     std::cout << "Invalid engine color in UCI\n";
+                //     std::cout << "error" << std::endl;
+                //     break;
+                // }
 
-                game.engine_moves(static_cast<Color>(engine_color));
+                // game.engine_moves(static_cast<Color>(engine_color));
 
                 break;
             }
 
             case Command::GETBOARD: {
-                game.board_state.printBoardArray();
+                game.get_board_state().printBoardArray();
                 std::cout << "readyok\n";
                 break;
             }
@@ -71,11 +73,10 @@ void uci_loop() {
                     break;
                 }
 
-                int num_moves = game.get_legal_moves(square);
-                const std::array<uint16_t, MAX_MOVES>& moves = game.movesArray;
+                std::vector<uint16_t> movesVector = game.get_legal_moves(square);
 
-                for (int i = 0; i < num_moves; ++i) {
-                    std::cout << moves[i] << std::endl;
+                for (uint16_t moveCode : movesVector) {
+                    std::cout << moveCode << std::endl;
                 }
 
                 std::cout << "readyok\n";
@@ -87,6 +88,15 @@ void uci_loop() {
                 iss >> move_code;
 
                 game.user_moves(move_code);
+                game.increase_ply();
+                break;
+            }
+
+            case Command::UNMAKE: {
+                game.decrease_ply();
+                game.changeTurn();
+                game.unmake_move();
+                std::cout << "readyok\n";
                 break;
             }
 
@@ -112,6 +122,7 @@ void uci_loop() {
 int main() {
     init_king_knight_lookups();
     init_pawn_lookups();
+    init_ray_tables();
     generate_magic_bitboards();
 
     uci_loop();

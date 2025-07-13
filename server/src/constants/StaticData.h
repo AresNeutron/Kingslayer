@@ -85,20 +85,6 @@ inline int getCastlingIdx(int rook_square) {
     return NO_SQ;
 }
 
-std::array<int, 2> getCastlingPath(int rook_square) {
-    switch (rook_square) {
-        case 0:  return {2, 3}; // Torre en 0 para flanco de dama blanco
-        case 7:  return {5, 6}; // Torre en 7 para flanco de rey blanco
-        case 56: return {58, 59}; // Torre en 56 para flanco de dama negro
-        case 63: return {61, 62}; // Torre en 63 para flanco de rey negro
-    }
-    return {NO_SQ, NO_SQ};
-}
-
-#define FOR_EACH_SET_BIT(bitboard, sq) \
-    for (uint64_t bb = (bitboard); bb; bb &= bb - 1) \
-        for (int sq = __builtin_ctzll(bb); bb; bb = 0)
-
 constexpr int CHECK_BONUS = 1000;
 constexpr int CHECKMATE_BONUS = 10000;
 
