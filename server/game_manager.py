@@ -99,6 +99,8 @@ class GameManager:
         # the UI will send something like "queen" or "knight", we take only the first letter as input
         return await self.game_flow(f'promote {promotion[0]}')
 
+    async def unmake_move(self):
+        return await self.game_flow("unmake")
 
     async def engine_moves(self) -> Tuple[str, int]:
         cmd = f"enginego {1 - self.user_color}"

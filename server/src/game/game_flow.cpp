@@ -9,10 +9,11 @@ void Game::user_moves(uint16_t move_code) {
         std::cout << eventMessages[PROMOTION] << std::endl; // "promotion"
     } else {
         changeTurn();
+        increase_ply();
 
         // these detectors can only be called in own turn
         uint64_t threats = detect_check();
-        detect_game_over();
+        if (game_event == CHECK) detect_game_over();
 
         std::cout << threats << std::endl;
         std::cout << eventMessages[game_event] << std::endl;
@@ -61,9 +62,11 @@ void Game::resolve_promotion(char input) {
     promotion_sq = NO_SQ;
     
     changeTurn();
-    
+    increase_ply();
+
+    // these detectors can only be called in own turn
     uint64_t threats = detect_check();
-    detect_game_over();
+    if (game_event == CHECK) detect_game_over();
 
     std::cout << threats << std::endl;
     std::cout << eventMessages[game_event] << std::endl;

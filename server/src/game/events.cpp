@@ -11,6 +11,8 @@ uint64_t Game::detect_check() {
     uint64_t threats = board_state.getAttackersForSq(sideToMove, king_sq);
     if (threats != 0) {
         game_event = CHECK;
+    }else {
+        game_event = NONE;
     }
 
     return threats;

@@ -47,8 +47,7 @@ void Game::make_move(uint16_t move_code) {
         }
         
         case CAPTURE: {
-            captured_piece = board_state.piece_at(to_sq);
-            board_state.deletePiece(to_sq);
+            captured_piece = board_state.deletePiece(to_sq);
             board_state.movePiece(from_sq, to_sq);
             undo_info.captured_piece = captured_piece;
             break;
@@ -61,8 +60,7 @@ void Game::make_move(uint16_t move_code) {
         
         case EN_PASSANT: {
             int captured_pawn_sq = sideToMove == WHITE ? (to_sq - 8) : (to_sq + 8);
-            captured_piece = board_state.piece_at(captured_pawn_sq);
-            board_state.deletePiece(captured_pawn_sq);
+            captured_piece = board_state.deletePiece(captured_pawn_sq);
             board_state.movePiece(from_sq, to_sq);
             undo_info.captured_piece = captured_piece;
             break;
@@ -163,6 +161,7 @@ void Game::unmake_move() {
     castling_rights = undo_info.prev_castling_rights;
     en_passant_sq = undo_info.prev_en_passant_sq;
     promotion_sq = NO_SQ;
+    game_event = NONE;
 }
 
 

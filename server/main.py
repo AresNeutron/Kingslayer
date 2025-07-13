@@ -104,8 +104,12 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 if event == "user_moves":
                     message, num = await game_manager.user_moves(data) # here "data" is the move code
 
-                elif event == "engine_moves":
-                    message, num = await game_manager.engine_moves() # data is not needed here
+                # disabled by now
+                # elif event == "engine_moves":
+                #     message, num = await game_manager.engine_moves() # data is not needed here
+
+                elif event == "unmake":
+                    message, num = await game_manager.unmake_move()
 
                 elif event == "promotion":
                     message, num = await game_manager.resolve_promotion(data) # here "data" is the promotion

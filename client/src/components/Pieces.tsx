@@ -5,18 +5,18 @@ import { useChessContext } from "@/hooks/ChessContext"
 import { Piece } from "@/helpers/constants"
 
 function Pieces() {
-  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState } =
+  const { isUserTurn, roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState } =
     useChessContext()
 
   function handleClick(squareIndex: number, piece: number) {
     const isWhite = piece > Piece.BLACK_ROOK
-    const isUserTurn = roleRef.current === isWhite
+    const canUserMove = (roleRef.current === isWhite) || (!isUserTurn && roleRef.current !== isWhite)
 
-    if (!isUserTurn && selectedSquare === null) return
+    if (!canUserMove && selectedSquare === null) return
 
     if (selectedSquare !== null) {
       // Change selected piece to another of the same color
-      if (isUserTurn) {
+      if (canUserMove) {
         handleLightState(squareIndex)
         setSelectedSquare(squareIndex)
         return
@@ -28,7 +28,7 @@ function Pieces() {
       }
     } else {
       // Select a piece for the first time (and it's your turn)
-      if (isUserTurn) {
+      if (canUserMove) {
         handleLightState(squareIndex)
         setSelectedSquare(squareIndex)
       }

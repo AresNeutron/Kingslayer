@@ -88,7 +88,6 @@ void uci_loop() {
                 iss >> move_code;
 
                 game.user_moves(move_code);
-                game.increase_ply();
                 break;
             }
 
@@ -96,6 +95,13 @@ void uci_loop() {
                 game.decrease_ply();
                 game.changeTurn();
                 game.unmake_move();
+
+                // these detectors can only be called in own turn
+                uint64_t threats = game.detect_check();
+                if (game.get_game_event() == CHECK) game.detect_game_over();
+
+                std::cout << threats << std::endl;
+                std::cout << eventMessages[game.get_game_event()] << std::endl;
                 std::cout << "readyok\n";
                 break;
             }

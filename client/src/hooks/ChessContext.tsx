@@ -5,7 +5,7 @@ import {
   ReactNode,
   useCallback,
   useContext,
-  useEffect,
+  // useEffect,
   useRef,
   useState,
 } from "react";
@@ -99,15 +99,15 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  useEffect(() => {
-    console.log("use effect is being triggered");
-    if (!isUserTurn) {
-      const success = send({ event: "engine_moves", data: null });
-      if (!success) {
-        console.warn("Could not call server to move engine");
-      }
-    }
-  }, [isUserTurn, send]);
+  // useEffect(() => {
+  //   console.log("use effect is being triggered");
+  //   if (!isUserTurn) {
+  //     const success = send({ event: "engine_moves", data: null });
+  //     if (!success) {
+  //       console.warn("Could not call server to move engine");
+  //     }
+  //   }
+  // }, [isUserTurn, send]);
 
   const updateBitboardState = async (gameId: string) => {
     if (gameId) {
@@ -164,6 +164,27 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
     },
     [send, wsConnected]
   );
+  
+  const handleUnmakeMove = useCallback(
+    () => {
+      if (!wsConnected()) {
+        setGameMessage("No hay conexión");
+      }
+
+      const success = send({
+        event: "unmake",
+        data: null,
+      });
+
+      if (success) {
+        setHighlight([]);
+        setSelectedSquare(null);
+        setThreats(0n);
+        setGameMessage("");
+      }
+    },
+    [send, wsConnected]
+  );
 
   return (
     <ChessContext.Provider
@@ -178,6 +199,7 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
         threats,
         handleLightState,
         handlePromotionState,
+        handleUnmakeMove,
         selectedSquare,
         setSelectedSquare,
         handleMoveState,

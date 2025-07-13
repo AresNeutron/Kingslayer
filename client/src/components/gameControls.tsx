@@ -23,6 +23,7 @@ function GameControls({
     gameMessage,
     setGameMessage,
     initializeWebSocket,
+    handleUnmakeMove
   } = useChessContext()
 
   const startGame = async (isWhite: boolean) => {
@@ -56,6 +57,12 @@ function GameControls({
     gameIdRef.current = ""
     roleRef.current = null
     setGameMessage("")
+  }
+
+  // Placeholder function for undo move - you'll implement the logic
+  const handleUndoMove = () => {
+    handleUnmakeMove();
+    console.log("Undo move requested")
   }
 
   // When in Dashboard mode, always show the game status panel
@@ -129,14 +136,37 @@ function GameControls({
                 </div>
               )}
 
-              {/* New Game Button */}
-              <div className="mt-4 text-center">
-                <button
-                  onClick={resetGame}
-                  className="px-6 py-2 bg-gradient-to-b from-[var(--accent)] to-[var(--primary)] text-[var(--primary-foreground)] font-bold rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50"
-                >
-                  ⚔️ FORGE NEW BATTLE
-                </button>
+              {/* Battle Actions - New Game and Undo Move buttons */}
+              <div className="mt-4 space-y-3">
+                {/* Undo Move Button - Only show during active game */}
+                {!gameMessage.includes("Game Over") && roleRef.current !== null && (
+                  <div className="text-center">
+                    <button
+                      onClick={handleUndoMove}
+                      className="group relative px-4 py-2 bg-gradient-to-b from-[var(--muted)] to-[var(--secondary)] text-[var(--primary-foreground)] font-bold text-sm rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--muted)] focus:ring-opacity-50 hover:from-[var(--secondary)] hover:to-[var(--muted)]"
+                      title="Reverse your last move"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-lg transform group-hover:-rotate-12 transition-transform duration-200">
+                          ⟲
+                        </span>
+                        <span className="tracking-wide">REVERSE MOVE</span>
+                      </span>
+                      {/* Subtle glow effect on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white opacity-0 group-hover:opacity-10 rounded-lg transition-opacity duration-200" />
+                    </button>
+                  </div>
+                )}
+
+                {/* New Game Button */}
+                <div className="text-center">
+                  <button
+                    onClick={resetGame}
+                    className="px-6 py-2 bg-gradient-to-b from-[var(--accent)] to-[var(--primary)] text-[var(--primary-foreground)] font-bold rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50"
+                  >
+                    ⚔️ FORGE NEW BATTLE
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -161,6 +191,10 @@ function GameControls({
             <div className="flex items-center gap-2">
               <span className="text-[var(--accent)]">🟣</span>
               <span>Purple shows special moves</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[var(--accent)]">⟲</span>
+              <span>Reverse Move button undoes last action</span>
             </div>
           </div>
         </div>
