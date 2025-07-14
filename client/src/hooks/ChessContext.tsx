@@ -133,7 +133,7 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
 
       const success = send({
         event: "promotion",
-        data: promotion,
+        data: (promotion % 6), // divide by 6 to ensure it's a piece type
       });
 
       if (success) {

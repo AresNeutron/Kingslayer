@@ -96,10 +96,9 @@ class GameManager:
         """Make a move via UCI makemove"""
         return await self.game_flow(f'makemove {move_code}')
     
-    async def resolve_promotion(self, promotion: str):
+    async def resolve_promotion(self, promotion):
         """Resolves the promotion via UCI"""
-        # the UI will send something like "queen" or "knight", we take only the first letter as input
-        return await self.game_flow(f'promote {promotion[0]}')
+        return await self.game_flow(f'promote {promotion}')
 
     async def unmake_move(self):
         return await self.game_flow("unmake")

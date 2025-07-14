@@ -106,10 +106,10 @@ void uci_loop() {
             }
 
             case Command::PROMOTE: {
-                char pchar;
-                iss >> pchar;
+                int promotion;
+                iss >> promotion;
                 
-                game.resolve_promotion(pchar);
+                game.resolve_promotion(promotion);
                 break;
             }
 
