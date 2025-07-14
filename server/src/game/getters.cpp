@@ -185,7 +185,7 @@ bool Game::would_be_check(uint16_t move_code) {
     Piece enemy = NO_PIECE;
 
     // Simulate move
-    if (is_capture) Piece enemy = board_state.deletePiece(to);
+    if (is_capture) enemy = board_state.deletePiece(to);
     board_state.movePiece(from, to);
 
     // Verify check

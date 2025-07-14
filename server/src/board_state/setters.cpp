@@ -35,7 +35,7 @@ void BoardState::movePiece(int fromSq, int toSq) {
 
 void BoardState::addPiece(int sq, Piece pc) {
     if (pc == NO_PIECE) return;
-    
+
     const uint64_t mask = 1ULL << sq;
     const Color color = colorOf(pc);
     
@@ -50,7 +50,6 @@ void BoardState::addPiece(int sq, Piece pc) {
 
 Piece BoardState::deletePiece(int sq) {
     const Piece pc = board[sq];
-    if (pc == NO_PIECE) return NO_PIECE;
     
     const uint64_t mask = 1ULL << sq;
     const Color color = colorOf(pc);

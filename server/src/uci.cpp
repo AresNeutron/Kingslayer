@@ -8,7 +8,7 @@
 Game game;
 
 enum class Command {
-    UCINEWGAME, ENGINEMOVES, GETBOARD,
+    UCINEWGAME, ENGINEMOVES, GETBOARD, GETUNDOSTACK,
     GETMOVES, USERMOVES, UNMAKE, PROMOTE, QUIT, UNKNOWN
 };
 
@@ -17,6 +17,7 @@ Command obtain_command(const std::string& token) {
         {"ucinewgame", Command::UCINEWGAME},
         {"enginego", Command::ENGINEMOVES},
         {"getboard", Command::GETBOARD},
+        {"getundostack", Command::GETUNDOSTACK},
         {"getmoves", Command::GETMOVES},
         {"promote", Command::PROMOTE},
         {"makemove", Command::USERMOVES},
@@ -60,6 +61,12 @@ void uci_loop() {
 
             case Command::GETBOARD: {
                 game.get_board_state().printBoardArray();
+                std::cout << "readyok\n";
+                break;
+            }
+
+            case Command::GETUNDOSTACK: {
+                game.print_undo_stack();
                 std::cout << "readyok\n";
                 break;
             }

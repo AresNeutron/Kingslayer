@@ -8,33 +8,10 @@ void Game::make_move(uint16_t move_code) {
     int to_sq = move_code & 0b111111U;
     MoveType move_type = static_cast<MoveType>(move_code >> 12);
     
-    // Input validation
-    if (board_state.piece_at(from_sq) == NO_PIECE) {
-        std::cout << "Error, attempting to call make_move function with empty square" << std::endl;
-        std::cout << "Move code: " << move_code << std::endl;
-        return;
-    }
-    
-    if (colorOf(board_state.piece_at(from_sq)) != sideToMove) {
-        std::cout << "Error, attempting to call make_move function with a piece of the opposite turn" << std::endl;
-        std::cout << "From sq: " << from_sq << ", To sq: " << to_sq << std::endl;
-        std::cout << "Side to move: " << (sideToMove == WHITE ? "White" : "Black") << std::endl;
-        return;
-    }
-
     Piece moving_piece = board_state.piece_at(from_sq);
     Piece captured_piece = NO_PIECE;
     int8_t new_ep_sq = NO_SQ;
 
-    // Store current state for undo
-    UndoInfo undo_info = {
-        move_code, 
-        NO_PIECE,  // Will be set if there's a capture
-        en_passant_sq, 
-        castling_rights
-    };
-
-    // Execute move based on type
     switch (move_type) {
         case MOVE: {
             // Check for double pawn push (creates en passant opportunity)
@@ -49,7 +26,6 @@ void Game::make_move(uint16_t move_code) {
         case CAPTURE: {
             captured_piece = board_state.deletePiece(to_sq);
             board_state.movePiece(from_sq, to_sq);
-            undo_info.captured_piece = captured_piece;
             break;
         }
         
@@ -62,7 +38,6 @@ void Game::make_move(uint16_t move_code) {
             int captured_pawn_sq = sideToMove == WHITE ? (to_sq - 8) : (to_sq + 8);
             captured_piece = board_state.deletePiece(captured_pawn_sq);
             board_state.movePiece(from_sq, to_sq);
-            undo_info.captured_piece = captured_piece;
             break;
         }
         
@@ -77,7 +52,6 @@ void Game::make_move(uint16_t move_code) {
             board_state.deletePiece(to_sq);
             board_state.movePiece(from_sq, to_sq);
             promotion_sq = to_sq;
-            undo_info.captured_piece = captured_piece;
             break;
         }
         
@@ -88,7 +62,14 @@ void Game::make_move(uint16_t move_code) {
         }
     }
 
-    // Update game state
+    // Store current state for undo
+    UndoInfo undo_info = {
+        move_code, 
+        captured_piece,
+        en_passant_sq, 
+        castling_rights
+    };
+
     undo_stack[ply] = undo_info;
     en_passant_sq = new_ep_sq;
     update_castling_rights(to_sq);

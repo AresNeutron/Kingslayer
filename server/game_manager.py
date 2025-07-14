@@ -89,6 +89,12 @@ class GameManager:
         print(lines) # debug
         message, num = lines[-1], lines[-2] 
         return message, int(num)
+
+    async def print_undo_stack(self) -> None:
+        await self._send_line('getundostack')
+        lines = await self._read_until('readyok')
+        for line in lines:
+            print(line)
     
     async def user_moves(self, move_code) -> Tuple[str, int]:
         """Make a move via UCI makemove"""

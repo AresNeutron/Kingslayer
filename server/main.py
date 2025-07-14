@@ -115,6 +115,9 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     message, num = await game_manager.resolve_promotion(data) # here "data" is the promotion
 
             if message is not None and num is not None:
+                # print the undo stack before each response
+                await game_manager.print_undo_stack()
+                
                 await websocket.send_json({
                     "event": message,
                     "data": num
