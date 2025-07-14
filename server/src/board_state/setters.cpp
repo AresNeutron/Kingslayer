@@ -67,35 +67,70 @@ Piece BoardState::deletePiece(int sq) {
 
 
 void BoardState::castling(int from_sq, int to_sq, bool reverse) {
-    Piece king = piece_at(from_sq);
+    Piece king = reverse ? piece_at(to_sq) : piece_at(from_sq);
     Color sideToMove = colorOf(king);
 
     int rook_from = NO_SQ, rook_to = NO_SQ;
 
-    if (to_sq - from_sq == +2) {
+    // Solo para las piezas negras
+    if (sideToMove == BLACK) {
+        std::cout << "--- Inicia castling para NEGRAS ---" << std::endl;
+        std::cout << "King from_sq: " << from_sq << ", to_sq: " << to_sq << std::endl;
+        std::cout << "Reverse flag: " << (reverse ? "true" : "false") << std::endl;
+    }
+
+    if (to_sq - from_sq == +2) { // Enroque corto (King-side)
         if (sideToMove == WHITE) {
             rook_from = SQ_H1;  // 7
             rook_to   = SQ_F1;  // 5
-        } else {
+        } else { // Caso de las negras
             rook_from = SQ_H8;  // 63
             rook_to   = SQ_F8;  // 61
+            std::cout << "Enroque corto (Negras) - Rook from: " << rook_from << ", to: " << rook_to << std::endl;
         }
-    } else if (to_sq - from_sq == -2) {
+    } else if (to_sq - from_sq == -2) { // Enroque largo (Queen-side)
         if (sideToMove == WHITE) {
             rook_from = SQ_A1;  // 0
             rook_to   = SQ_D1;  // 3
-        } else {
+        } else { // Caso de las negras
             rook_from = SQ_A8;  // 56
             rook_to   = SQ_D8;  // 59
+            std::cout << "Enroque largo (Negras) - Rook from: " << rook_from << ", to: " << rook_to << std::endl;
         }
     } 
 
     if (reverse) {
+        if (sideToMove == BLACK) {
+            std::cout << "Revirtiendo enroque (Negras):" << std::endl;
+            std::cout << "  Antes de mover torre: piece_at(" << rook_to << ") = " << (int)piece_at(rook_to) << ", piece_at(" << rook_from << ") = " << (int)piece_at(rook_from) << std::endl;
+        }
         movePiece(rook_to, rook_from);
+        if (sideToMove == BLACK) {
+            std::cout << "  Después de mover torre: piece_at(" << rook_to << ") = " << (int)piece_at(rook_to) << ", piece_at(" << rook_from << ") = " << (int)piece_at(rook_from) << std::endl;
+            std::cout << "  Antes de mover rey: piece_at(" << to_sq << ") = " << (int)piece_at(to_sq) << ", piece_at(" << from_sq << ") = " << (int)piece_at(from_sq) << std::endl;
+        }
         movePiece(to_sq, from_sq);
+        if (sideToMove == BLACK) {
+            std::cout << "  Después de mover rey: piece_at(" << to_sq << ") = " << (int)piece_at(to_sq) << ", piece_at(" << from_sq << ") = " << (int)piece_at(from_sq) << std::endl;
+        }
     } else {
+        if (sideToMove == BLACK) {
+            std::cout << "Aplicando enroque (Negras):" << std::endl;
+            std::cout << "  Antes de mover rey: piece_at(" << from_sq << ") = " << (int)piece_at(from_sq) << ", piece_at(" << to_sq << ") = " << (int)piece_at(to_sq) << std::endl;
+        }
         movePiece(from_sq, to_sq);
+        if (sideToMove == BLACK) {
+            std::cout << "  Después de mover rey: piece_at(" << from_sq << ") = " << (int)piece_at(from_sq) << ", piece_at(" << to_sq << ") = " << (int)piece_at(to_sq) << std::endl;
+            std::cout << "  Antes de mover torre: piece_at(" << rook_from << ") = " << (int)piece_at(rook_from) << ", piece_at(" << rook_to << ") = " << (int)piece_at(rook_to) << std::endl;
+        }
         movePiece(rook_from, rook_to);
+        if (sideToMove == BLACK) {
+            std::cout << "  Después de mover torre: piece_at(" << rook_from << ") = " << (int)piece_at(rook_from) << ", piece_at(" << rook_to << ") = " << (int)piece_at(rook_to) << std::endl;
+        }
+    }
+
+    if (sideToMove == BLACK) {
+        std::cout << "--- Finaliza castling para NEGRAS ---" << std::endl;
     }
 }
 

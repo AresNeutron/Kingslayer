@@ -101,9 +101,6 @@ public:
     void user_moves(uint16_t move_code);
     // void engine_moves(Color engine_color);
     void resolve_promotion(char input);
-
-    // debug only
-    void print_undo_stack();
 };
 
 #endif
