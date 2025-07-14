@@ -4,8 +4,10 @@
 #include <unordered_map>
 #include "./game/Game.h"
 #include "./board_state/BoardState.h"
+#include "./search/Search.h"
 
 Game game;
+Search search;
 
 enum class Command {
     UCINEWGAME, ENGINEMOVES, GETBOARD, GETMOVES, USERMOVES, UNMAKE, PROMOTE, QUIT, UNKNOWN
@@ -38,21 +40,32 @@ void uci_loop() {
         switch (obtain_command(token)) {
             case Command::UCINEWGAME:
                 game = Game();
+                search = Search();
                 std::cout << "New Game Started\n";
                 std::cout << "readyok\n";
                 break;
 
                 // disabled by now
             case Command::ENGINEMOVES:{
-                // int engine_color;
-                // iss >> engine_color;
-                // if (engine_color != 0 && engine_color != 1) {
-                //     std::cout << "Invalid engine color in UCI\n";
-                //     std::cout << "error" << std::endl;
-                //     break;
-                // }
-
-                // game.engine_moves(static_cast<Color>(engine_color));
+                // Depth of 4, no recursion by now, it's not ready
+                uint16_t best = search.find_best_move(game, 4);
+            
+                game.make_move(best);
+                
+                if (game.promotion_sq != NO_SQ) {
+                    game.get_board_state().promote(game.promotion_sq); // promote to queen by default
+                    game.promotion_sq = NO_SQ;
+                }
+            
+                game.changeTurn();
+                game.increase_ply();
+            
+                uint64_t threats = game.detect_check();
+                game.detect_game_over();
+            
+                std::cout << threats << std::endl;
+                std::cout << eventMessages[game.get_game_event()] << std::endl;
+                std::cout << "readyok\n";
 
                 break;
             }
@@ -97,7 +110,7 @@ void uci_loop() {
 
                 // these detectors can only be called in own turn
                 uint64_t threats = game.detect_check();
-                if (game.get_game_event() == CHECK) game.detect_game_over();
+                game.detect_game_over();
 
                 std::cout << threats << std::endl;
                 std::cout << eventMessages[game.get_game_event()] << std::endl;

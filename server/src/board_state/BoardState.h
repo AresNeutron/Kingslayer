@@ -96,4 +96,27 @@ public:
             std::cout << static_cast<int>(board[i]) << std::endl;
         }
     }
+
+    // used only for debugging
+    // void printBoardArray() const {
+    //     std::cout << "--- Chess Board ---" << std::endl;
+    //     for (int i = 0; i < 64; ++i) {
+    //         // Imprime la representación de la pieza
+    //         std::cout << pieceStrings[board[i]] << " ";
+
+    //         // Después de cada 8 casillas, imprime un salto de línea
+    //         if ((i + 1) % 8 == 0) {
+    //             std::cout << std::endl;
+    //         }
+    //     }
+    //     std::cout << "-------------------------" << std::endl;
+    // }
+    
+    // debug only
+    // void print_bitboard(uint64_t bb) const {
+    //     for (int i = 0; i < 64; ++i) {
+    //         std::cout << ((bb >> i) & 1) << " ";
+    //         if (i % 8 == 7) std::cout << std::endl;
+    //     }
+    // }
 };

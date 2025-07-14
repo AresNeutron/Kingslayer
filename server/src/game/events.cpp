@@ -20,6 +20,8 @@ uint64_t Game::detect_check() {
 
 // Verifies if last enemy move ended the game, only called when check was previously detected
 bool Game::detect_game_over() {
+    if (game_event != CHECK) return false;
+
     uint64_t king_bb = board_state.king(sideToMove);
     int king_sq = __builtin_ctzll(king_bb);
 

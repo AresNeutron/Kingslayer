@@ -10,7 +10,7 @@
 
 
 class Game {
-private:
+public:
     // =========================
     // CORE GAME STATE
     // =========================
@@ -99,7 +99,6 @@ public:
     // USER INTERFACE METHODS
     // =========================
     void user_moves(uint16_t move_code);
-    // void engine_moves(Color engine_color);
     void resolve_promotion(int promotion);
 };
 

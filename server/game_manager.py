@@ -104,8 +104,8 @@ class GameManager:
         return await self.game_flow("unmake")
 
     async def engine_moves(self) -> Tuple[str, int]:
-        cmd = f"enginego {1 - self.user_color}"
-        return await self.game_flow(cmd)
+        """Make a move via UCI enginego"""
+        return await self.game_flow("enginego")
 
     async def get_board(self) -> List[int]:
         """Retrieve board state via custom getboard command."""

@@ -5,7 +5,7 @@ import {
   ReactNode,
   useCallback,
   useContext,
-  // useEffect,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -99,15 +99,15 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  // useEffect(() => {
-  //   console.log("use effect is being triggered");
-  //   if (!isUserTurn) {
-  //     const success = send({ event: "engine_moves", data: null });
-  //     if (!success) {
-  //       console.warn("Could not call server to move engine");
-  //     }
-  //   }
-  // }, [isUserTurn, send]);
+  useEffect(() => {
+    console.log("use effect is being triggered");
+    if (!isUserTurn) {
+      const success = send({ event: "engine_moves", data: null });
+      if (!success) {
+        console.warn("Could not call server to move engine");
+      }
+    }
+  }, [isUserTurn, send]);
 
   const updateBitboardState = async (gameId: string) => {
     if (gameId) {

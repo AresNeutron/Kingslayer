@@ -4,11 +4,6 @@
 
 // Función principal que encuentra el mejor movimiento
 uint16_t Search::find_best_move(Game& game, int depth) {
-    if (depth <= 0) {
-        std::cout << "Error: depth must be positive" << std::endl;
-        return 0;
-    }
-
     uint16_t best_move = 0;
     double best_eval = -std::numeric_limits<double>::infinity();
     double alpha = -std::numeric_limits<double>::infinity();
@@ -37,8 +32,8 @@ uint16_t Search::find_best_move(Game& game, int depth) {
             double eval = -negamax(game, depth - 1, -beta, -alpha);
             
             // Revertir el cambio antes de revertir movimiento
-            game.changeTurn();
             game.decrease_ply();
+            game.changeTurn();
             
             // Deshacer el movimiento
             game.unmake_move();
@@ -103,7 +98,6 @@ double Search::negamax(Game& game, int depth, double alpha, double beta) {
         for (uint16_t move : legal_moves) {
             // Hacer el movimiento
             game.make_move(move);
-            
             // Cambiar variables de estado
             game.changeTurn();
             game.increase_ply();
@@ -114,7 +108,7 @@ double Search::negamax(Game& game, int depth, double alpha, double beta) {
             // Revertir el cambio antes de revertir movimiento
             game.changeTurn();
             game.decrease_ply();
-            
+
             // Deshacer el movimiento
             game.unmake_move();
             

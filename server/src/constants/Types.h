@@ -24,6 +24,12 @@ enum Piece : uint8_t {
     NO_PIECE      = 12
 };
 
+const std::string pieceStrings[] = {
+    "bB", "bK", "bN", "bP", "bQ", "bR", // Piezas negras
+    "wB", "wK", "wN", "wP", "wQ", "wR", // Piezas blancas
+    "--" // NO_PIECE (puedes usar "  " o cualquier otra cosa)
+};
+
 // Para mapear pieza → índice “tipo” (0=alfil,1=rey,2=caballo,3=peón,4=dama,5=torre)
 // independientemente de color:
 enum Type : uint8_t {

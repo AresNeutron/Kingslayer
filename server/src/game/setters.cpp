@@ -70,37 +70,16 @@ void Game::make_move(uint16_t move_code) {
         castling_rights
     };
 
-    // debug only
-    std::cout << "MAKING MOVE: UNDO INFO" << std::endl;
-    uint16_t moveCode = undo_info.move_code;
-    std::cout << "From: " << ((moveCode >> 6) & 0b111111U) << std::endl;
-    std::cout << "To: " << (moveCode & 0b111111U) << std::endl;
-    std::cout << "Move Type: " << static_cast<int>(moveCode >> 12) << std::endl;
-    std::cout << "Captured Piece: " << static_cast<int>(undo_info.captured_piece) << std::endl; 
-    std::cout << "En Passant Square: " << static_cast<int>(undo_info.prev_en_passant_sq) << std::endl;
-    std::cout << "Castling Rights: " << static_cast<int>(undo_info.prev_castling_rights) << std::endl;
-    std::cout << "---------------------" << std::endl;
-
     undo_stack[ply] = undo_info;
     en_passant_sq = new_ep_sq;
     update_castling_rights(to_sq);
+    set_pinned_pieces();
 }
 
 
 void Game::unmake_move() {
     UndoInfo undo_info = undo_stack[ply];
-
-    // debug only
-    std::cout << "UNMAKE CALL: UNDO INFO" << std::endl;
     uint16_t move_code = undo_info.move_code;
-    std::cout << "From: " << ((move_code >> 6) & 0b111111U) << std::endl;
-    std::cout << "To: " << (move_code & 0b111111U) << std::endl;
-    std::cout << "Move Type: " << static_cast<int>(move_code >> 12) << std::endl;
-    std::cout << "Captured Piece: " << static_cast<int>(undo_info.captured_piece) << std::endl; 
-    std::cout << "En Passant Square: " << static_cast<int>(undo_info.prev_en_passant_sq) << std::endl;
-    std::cout << "Castling Rights: " << static_cast<int>(undo_info.prev_castling_rights) << std::endl;
-    std::cout << "---------------------" << std::endl;
-    
     int from_sq = (move_code >> 6) & 0b111111U;
     int to_sq = move_code & 0b111111U;
     MoveType move_type = static_cast<MoveType>(move_code >> 12);
@@ -156,7 +135,7 @@ void Game::unmake_move() {
     castling_rights = undo_info.prev_castling_rights;
     en_passant_sq = undo_info.prev_en_passant_sq;
     promotion_sq = NO_SQ;
-    game_event = NONE;
+    set_pinned_pieces();
 }
 
 
