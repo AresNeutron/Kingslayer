@@ -107,9 +107,6 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                 elif event == "engine_moves":
                     message, num = await game_manager.engine_moves() # data is not needed here
 
-                elif event == "unmake":
-                    message, num = await game_manager.unmake_move()
-
                 elif event == "promotion":
                     message, num = await game_manager.resolve_promotion(data) # here "data" is the promotion
 

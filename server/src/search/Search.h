@@ -11,4 +11,6 @@ public:
 
     // Función principal para encontrar el mejor movimiento
     uint16_t find_best_move(Game& game, int depth);
+
+    void engine_moves(Game& game);
 };

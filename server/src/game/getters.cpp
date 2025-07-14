@@ -180,12 +180,18 @@ bool Game::would_be_check(uint16_t move_code) {
     int to = move_code & 0b111111U;
     MoveType type = static_cast<MoveType>(move_code >> 12);
 
+    if (board_state.getType(board_state.piece_at(to)) == KING) {
+        std::cout << "Simulation with KING not allowed" << std::endl;
+        return false;
+    }
+
     bool is_check = false;
     bool is_capture = type == CAPTURE || type == PROMOTION_CAPTURE;
     Piece enemy = NO_PIECE;
 
     // Simulate move
     if (is_capture) enemy = board_state.deletePiece(to);
+
     board_state.movePiece(from, to);
 
     // Verify check

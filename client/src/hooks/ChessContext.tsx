@@ -65,20 +65,18 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
 
         case "none":
           setIsUserTurn((prevState) => !prevState);
+          setThreats(0n);
+          setGameMessage('')
           break;
 
         case "check":
           setThreats(data);
-          setGameMessage("Your king is in check!");
-          setIsUserTurn(true);
+          setGameMessage("CHECK!");
+          setIsUserTurn((prevState) => !prevState);
           break;
 
         case "checkmate":
-          const message = `Game Over. ${
-            data["user_wins"]
-              ? "Congratulations, you win!"
-              : "Seems that my engine could beat you."
-          }`;
+          const message = `Game Over.`;
           setGameMessage(message);
           setIsUserTurn(false);
           break;
@@ -165,27 +163,6 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
     [send, wsConnected]
   );
   
-  const handleUnmakeMove = useCallback(
-    () => {
-      if (!wsConnected()) {
-        setGameMessage("No hay conexión");
-      }
-
-      const success = send({
-        event: "unmake",
-        data: null,
-      });
-
-      if (success) {
-        setHighlight([]);
-        setSelectedSquare(null);
-        setThreats(0n);
-        setGameMessage("");
-      }
-    },
-    [send, wsConnected]
-  );
-
   return (
     <ChessContext.Provider
       value={{
@@ -199,7 +176,6 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
         threats,
         handleLightState,
         handlePromotionState,
-        handleUnmakeMove,
         selectedSquare,
         setSelectedSquare,
         handleMoveState,

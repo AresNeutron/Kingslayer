@@ -10,7 +10,7 @@
 
 
 class Game {
-public:
+private:
     // =========================
     // CORE GAME STATE
     // =========================
@@ -26,7 +26,7 @@ public:
     // SEARCH & MOVE DATA
     // =========================
     std::array<uint64_t, 64> pinned_rays;           // Ray for pinned pieces, 0 if not pinned
-    std::array<UndoInfo, 100> undo_stack;     // Stack for move undo information
+    std::array<UndoInfo, MAX_DEPTH> undo_stack;     // Stack for move undo information
    
     // three arrays to store different priority moves
     std::array<uint16_t, 8> high_priority_moves;
@@ -81,6 +81,8 @@ public:
     inline BoardState get_board_state() const noexcept { return board_state; }
     inline GameEvent get_game_event() const noexcept { return game_event; }
     inline Color get_side_to_move() const noexcept { return sideToMove; }
+    inline int get_promotion_sq() const noexcept { return promotion_sq; }
+    inline void set_promotion_sq(int8_t sq) noexcept { promotion_sq = sq; }
 
     // =========================
     // MOVE GENERATION & EXECUTION

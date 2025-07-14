@@ -10,7 +10,7 @@ Game game;
 Search search;
 
 enum class Command {
-    UCINEWGAME, ENGINEMOVES, GETBOARD, GETMOVES, USERMOVES, UNMAKE, PROMOTE, QUIT, UNKNOWN
+    UCINEWGAME, ENGINEMOVES, GETBOARD, GETMOVES, USERMOVES, PROMOTE, QUIT, UNKNOWN
 };
 
 Command obtain_command(const std::string& token) {
@@ -21,7 +21,6 @@ Command obtain_command(const std::string& token) {
         {"getmoves", Command::GETMOVES},
         {"promote", Command::PROMOTE},
         {"makemove", Command::USERMOVES},
-        {"unmake", Command::UNMAKE},
         {"quit", Command::QUIT}
     };
 
@@ -47,26 +46,7 @@ void uci_loop() {
 
                 // disabled by now
             case Command::ENGINEMOVES:{
-                // Depth of 4, no recursion by now, it's not ready
-                uint16_t best = search.find_best_move(game, 4);
-            
-                game.make_move(best);
-                
-                if (game.promotion_sq != NO_SQ) {
-                    game.get_board_state().promote(game.promotion_sq); // promote to queen by default
-                    game.promotion_sq = NO_SQ;
-                }
-            
-                game.changeTurn();
-                game.increase_ply();
-            
-                uint64_t threats = game.detect_check();
-                game.detect_game_over();
-            
-                std::cout << threats << std::endl;
-                std::cout << eventMessages[game.get_game_event()] << std::endl;
-                std::cout << "readyok\n";
-
+                search.engine_moves(game);
                 break;
             }
 
@@ -100,21 +80,6 @@ void uci_loop() {
                 iss >> move_code;
 
                 game.user_moves(move_code);
-                break;
-            }
-
-            case Command::UNMAKE: {
-                game.decrease_ply();
-                game.changeTurn();
-                game.unmake_move();
-
-                // these detectors can only be called in own turn
-                uint64_t threats = game.detect_check();
-                game.detect_game_over();
-
-                std::cout << threats << std::endl;
-                std::cout << eventMessages[game.get_game_event()] << std::endl;
-                std::cout << "readyok\n";
                 break;
             }
 

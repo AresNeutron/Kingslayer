@@ -100,9 +100,6 @@ class GameManager:
         """Resolves the promotion via UCI"""
         return await self.game_flow(f'promote {promotion}')
 
-    async def unmake_move(self):
-        return await self.game_flow("unmake")
-
     async def engine_moves(self) -> Tuple[str, int]:
         """Make a move via UCI enginego"""
         return await self.game_flow("enginego")

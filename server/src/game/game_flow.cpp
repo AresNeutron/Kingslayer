@@ -1,7 +1,6 @@
 #include "Game.h"
 
 void Game::user_moves(uint16_t move_code) {
-    // make the move
     make_move(move_code);
 
     if (promotion_sq != NO_SQ) {
@@ -9,7 +8,6 @@ void Game::user_moves(uint16_t move_code) {
         std::cout << eventMessages[PROMOTION] << std::endl; // "promotion"
     } else {
         changeTurn();
-        increase_ply();
 
         // these detectors can only be called in own turn
         uint64_t threats = detect_check();
@@ -27,7 +25,6 @@ void Game::resolve_promotion(int promotion) {
     promotion_sq = NO_SQ;
     
     changeTurn();
-    increase_ply();
 
     // these detectors can only be called in own turn
     uint64_t threats = detect_check();

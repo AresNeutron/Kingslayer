@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -O2
+CXXFLAGS = -g -std=c++20 -O2
 
 # Lista de archivos fuente (excluyendo magic_number_generator.cpp)
 SRCS = \

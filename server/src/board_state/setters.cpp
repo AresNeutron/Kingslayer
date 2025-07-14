@@ -36,6 +36,13 @@ void BoardState::movePiece(int fromSq, int toSq) {
 void BoardState::addPiece(int sq, Piece pc) {
     if (pc == NO_PIECE) return;
 
+    // if (getType(pc) == KING) {
+    //     std::cout << "You cannot ADD KING" << std::endl;
+    //     std::cout << "Piece: " << static_cast<int>(pc) << std::endl;
+    //     std::cout << "Square: " << sq << std::endl;
+    //     return;
+    // }
+
     const uint64_t mask = 1ULL << sq;
     const Color color = colorOf(pc);
     
@@ -50,6 +57,13 @@ void BoardState::addPiece(int sq, Piece pc) {
 
 Piece BoardState::deletePiece(int sq) {
     const Piece pc = board[sq];
+
+    if (getType(pc) == KING) {
+        std::cout << "You cannot DELETE KING" << std::endl;
+        std::cout << "Piece: " << static_cast<int>(pc) << std::endl;
+        std::cout << "Square: " << sq << std::endl;
+        return pc;
+    }
     
     const uint64_t mask = 1ULL << sq;
     const Color color = colorOf(pc);

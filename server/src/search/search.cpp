@@ -159,3 +159,26 @@ int Search::evaluate_board(const BoardState& board_state, Color sideToMove) cons
     // Devuelve la puntuación desde la perspectiva del jugador actual.
     return (sideToMove == WHITE) ? score : -score;
 }
+
+
+void Search::engine_moves(Game& game) {
+    // Depth of 4 is the max by now
+    uint16_t best = find_best_move(game, 4);
+
+    game.make_move(best);
+    
+    // later we must implement an heuristic for promotion
+    if (game.get_promotion_sq() != NO_SQ) {
+        game.get_board_state().promote(game.get_promotion_sq()); // promote to queen by default
+        game.set_promotion_sq(NO_SQ);
+    }
+
+    game.changeTurn();
+
+    uint64_t threats = game.detect_check();
+    game.detect_game_over();
+
+    std::cout << threats << std::endl;
+    std::cout << eventMessages[game.get_game_event()] << std::endl;
+    std::cout << "readyok\n";
+}
