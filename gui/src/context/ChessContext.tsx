@@ -1,19 +1,13 @@
-"use client";
-
 import {
-  createContext,
-  ReactNode,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { getBoard, getMoves } from "../helpers/engine_calls";
-import { ChessContextValue } from "../types/context";
-import { useWebSocket } from "./useWebSocket";
-
-const ChessContext = createContext<ChessContextValue | undefined>(undefined);
+import { useWebSocket } from "../hooks/useWebSocket";
+import { ChessContext } from "../hooks/useChessContext";
 
 const ContextProvider = ({ children }: { children: ReactNode }) => {
   const roleRef = useRef(null);
@@ -32,25 +26,6 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
   // Hook WebSocket optimizado
   const { connect, send, isConnected: wsConnected } = useWebSocket();
 
-  const initializeWebSocket = useCallback(
-    async (gameId: string) => {
-      try {
-        const ws = await connect(gameId);
-        socketRef.current = ws;
-
-        // Configurar handlers
-        ws.onmessage = handleMessage;
-
-        return ws;
-      } catch (error) {
-        console.error("Error conectando WebSocket:", error);
-        setGameMessage("Error de conexión");
-        throw error;
-      }
-    },
-    [connect]
-  );
-
   // These are the possible server messages: "none", "check", "checkmate", "stalemate", "promotion"
   const handleMessage = useCallback((messageEvent: MessageEvent) => {
     try {
@@ -66,7 +41,7 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
         case "none":
           setIsUserTurn((prevState) => !prevState);
           setThreats(0n);
-          setGameMessage('')
+          setGameMessage("");
           break;
 
         case "check":
@@ -76,8 +51,7 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
           break;
 
         case "checkmate":
-          const message = `Game Over.`;
-          setGameMessage(message);
+          setGameMessage("Game Over");
           setIsUserTurn(false);
           break;
 
@@ -96,6 +70,25 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error parseando mensaje WebSocket:", err);
     }
   }, []);
+
+  const initializeWebSocket = useCallback(
+    async (gameId: string) => {
+      try {
+        const ws = await connect(gameId);
+        socketRef.current = ws;
+
+        // Configurar handlers
+        ws.onmessage = handleMessage;
+
+        return ws;
+      } catch (error) {
+        console.error("Error conectando WebSocket:", error);
+        setGameMessage("Error de conexión");
+        throw error;
+      }
+    },
+    [connect, handleMessage]
+  );
 
   useEffect(() => {
     console.log("use effect is being triggered");
@@ -131,7 +124,7 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
 
       const success = send({
         event: "promotion",
-        data: (promotion % 6), // divide by 6 to ensure it's a piece type
+        data: promotion % 6, // divide by 6 to ensure it's a piece type
       });
 
       if (success) {
@@ -162,7 +155,7 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
     },
     [send, wsConnected]
   );
-  
+
   return (
     <ChessContext.Provider
       value={{
@@ -192,11 +185,3 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export default ContextProvider;
-
-export const useChessContext = () => {
-  const context = useContext(ChessContext);
-  if (!context) {
-    throw new Error("Must be used within a AppContext Provider");
-  }
-  return context;
-};

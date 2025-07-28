@@ -1,6 +1,4 @@
-// types/chessContext.ts
-
-import { Dispatch, RefObject, SetStateAction } from "react";
+import type { Dispatch, RefObject, SetStateAction } from "react";
 
 export interface ChessContextValue {
   board: number[];

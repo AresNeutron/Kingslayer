@@ -1,6 +1,6 @@
 // hooks/useWebSocket.js
-import { GameMessage } from "@/types/types";
-import { useRef, useCallback, RefObject } from "react";
+import { useRef, useCallback, type RefObject } from "react";
+import type { GameMessage } from "../types/types";
 
 export function useWebSocket() {
   const socketRef: RefObject<null | WebSocket> = useRef(null);
@@ -9,7 +9,7 @@ export function useWebSocket() {
   const connect = useCallback(async (gameId: string): Promise<WebSocket> => {
     return new Promise((resolve, reject) => {
       try {
-        const url = process.env.NEXT_PUBLIC_BACKEND_URL?.replace("http", "ws");
+        const url = import.meta.env.VITE_PUBLIC_BACKEND_URL?.replace("http", "ws");
         if (!url) {
           reject(new Error("Backend URL not configured"));
           return;

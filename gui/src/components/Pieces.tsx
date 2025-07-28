@@ -1,37 +1,43 @@
-"use client"
-
-import Image from "next/image"
-import { useChessContext } from "@/hooks/ChessContext"
-import { Piece } from "@/helpers/constants"
+import { Piece } from "../helpers/constants";
+import { useChessContext } from "../hooks/useChessContext";
 
 function Pieces() {
-  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState } =
-    useChessContext()
+  const {
+    roleRef,
+    board,
+    highlight,
+    selectedSquare,
+    setSelectedSquare,
+    handleLightState,
+    handleMoveState,
+  } = useChessContext();
 
   function handleClick(squareIndex: number, piece: number) {
-    const isWhite = piece > Piece.BLACK_ROOK
-    const canUserMove = (roleRef.current === isWhite)
+    const isWhite = piece > Piece.BLACK_ROOK;
+    const canUserMove = roleRef.current === isWhite;
     //  || (!isUserTurn && roleRef.current !== isWhite)
 
-    if (!canUserMove && selectedSquare === null) return
+    if (!canUserMove && selectedSquare === null) return;
 
     if (selectedSquare !== null) {
       // Change selected piece to another of the same color
       if (canUserMove) {
-        handleLightState(squareIndex)
-        setSelectedSquare(squareIndex)
-        return
+        handleLightState(squareIndex);
+        setSelectedSquare(squareIndex);
+        return;
       }
       // Move to a square (capture or move to empty square)
-      const validMoveCode = highlight.find((move) => (move & 0x3f) === squareIndex)
+      const validMoveCode = highlight.find(
+        (move) => (move & 0x3f) === squareIndex
+      );
       if (validMoveCode !== undefined) {
-        handleMoveState(validMoveCode)
+        handleMoveState(validMoveCode);
       }
     } else {
       // Select a piece for the first time (and it's your turn)
       if (canUserMove) {
-        handleLightState(squareIndex)
-        setSelectedSquare(squareIndex)
+        handleLightState(squareIndex);
+        setSelectedSquare(squareIndex);
       }
     }
   }
@@ -41,10 +47,12 @@ function Pieces() {
       <div className="relative w-full h-full">
         {board.map((piece, i) => {
           if (piece !== Piece.NO_PIECE) {
-            const col = i % 8
-            const row = roleRef.current ? 7 - Math.floor(i / 8) : Math.floor(i / 8)
-            const isWhite = piece > Piece.BLACK_ROOK
-            const isSelected = selectedSquare === i
+            const col = i % 8;
+            const row = roleRef.current
+              ? 7 - Math.floor(i / 8)
+              : Math.floor(i / 8);
+            const isWhite = piece > Piece.BLACK_ROOK;
+            const isSelected = selectedSquare === i;
 
             return (
               <div
@@ -67,9 +75,15 @@ function Pieces() {
                     className="absolute inset-0 rounded-full animate-pulse"
                     style={{
                       background: `radial-gradient(circle, ${
-                        isWhite ? "hsla(45, 85%, 55%, 0.4)" : "hsla(280, 50%, 40%, 0.4)"
+                        isWhite
+                          ? "hsla(45, 85%, 55%, 0.4)"
+                          : "hsla(280, 50%, 40%, 0.4)"
                       } 0%, transparent 70%)`,
-                      boxShadow: `0 0 30px ${isWhite ? "hsla(45, 85%, 55%, 0.6)" : "hsla(280, 50%, 40%, 0.6)"}`,
+                      boxShadow: `0 0 30px ${
+                        isWhite
+                          ? "hsla(45, 85%, 55%, 0.6)"
+                          : "hsla(280, 50%, 40%, 0.6)"
+                      }`,
                     }}
                   />
                 )}
@@ -84,7 +98,11 @@ function Pieces() {
                     filter: `
                       drop-shadow(0 4px 8px rgba(0,0,0,0.4))
                       drop-shadow(0 2px 4px rgba(0,0,0,0.3))
-                      ${isSelected ? "drop-shadow(0 0 20px rgba(255,215,0,0.5))" : ""}
+                      ${
+                        isSelected
+                          ? "drop-shadow(0 0 20px rgba(255,215,0,0.5))"
+                          : ""
+                      }
                     `,
                   }}
                 >
@@ -93,25 +111,38 @@ function Pieces() {
                     <div
                       className="absolute inset-2 rounded-full opacity-20"
                       style={{
-                        background: "radial-gradient(circle, #f4e4d0 0%, transparent 70%)",
+                        background:
+                          "radial-gradient(circle, #f4e4d0 0%, transparent 70%)",
                       }}
                     />
                   )}
 
-                  <Image
+                  <img
                     src={`/images/${piece}.png`}
                     alt={`Chess piece ${piece}`}
                     width={64}
                     height={64}
                     className={`object-contain transition-all duration-200 ease-in-out relative z-10
-                      ${isWhite ? "brightness-110 contrast-110" : "brightness-95"}
+                      ${
+                        isWhite
+                          ? "brightness-110 contrast-110"
+                          : "brightness-95"
+                      }
                       group-hover:brightness-110
                       ${isSelected ? "brightness-125" : ""}`}
                     style={{
                       // Enhanced styling for medieval look
                       filter: `
-                        ${isWhite ? "drop-shadow(0 0 2px rgba(244,228,208,0.8))" : ""}
-                        ${isSelected ? "drop-shadow(0 0 10px rgba(255,215,0,0.8))" : ""}
+                        ${
+                          isWhite
+                            ? "drop-shadow(0 0 2px rgba(244,228,208,0.8))"
+                            : ""
+                        }
+                        ${
+                          isSelected
+                            ? "drop-shadow(0 0 10px rgba(255,215,0,0.8))"
+                            : ""
+                        }
                         saturate(1.1)
                         contrast(1.05)
                       `,
@@ -121,10 +152,16 @@ function Pieces() {
                   {/* Medieval piece border effect */}
                   <div
                     className={`absolute inset-1 rounded-full border transition-all duration-200 ease-in-out pointer-events-none
-                      ${isSelected ? "border-yellow-400 opacity-60" : "border-transparent"}
+                      ${
+                        isSelected
+                          ? "border-yellow-400 opacity-60"
+                          : "border-transparent"
+                      }
                       ${isSelected ? "animate-pulse" : ""}`}
                     style={{
-                      boxShadow: isSelected ? "inset 0 0 10px rgba(255,215,0,0.3)" : "none",
+                      boxShadow: isSelected
+                        ? "inset 0 0 10px rgba(255,215,0,0.3)"
+                        : "none",
                     }}
                   />
                 </div>
@@ -139,13 +176,13 @@ function Pieces() {
                   }}
                 />
               </div>
-            )
+            );
           }
-          return null
+          return null;
         })}
       </div>
     </div>
-  )
+  );
 }
 
-export default Pieces
+export default Pieces;

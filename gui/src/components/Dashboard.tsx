@@ -1,13 +1,15 @@
-"use client"
+import Promote from "./Promote";
+import Board from "./Board";
+import GameControls from "./gameControls";
+import type { Dispatch, SetStateAction } from "react";
+import { useChessContext } from "../hooks/useChessContext";
 
-import Promote from "@/components/Promote"
-import Board from "@/components/Board"
-import GameControls from "@/components/gameControls"
-import { useChessContext } from "@/hooks/ChessContext"
-import type { Dispatch, SetStateAction } from "react"
-
-function Dashboard({ setIsPlaying }: { setIsPlaying: Dispatch<SetStateAction<boolean>> }) {
-  const { isPromoting, board, roleRef } = useChessContext()
+function Dashboard({
+  setIsPlaying,
+}: {
+  setIsPlaying: Dispatch<SetStateAction<boolean>>;
+}) {
+  const { isPromoting, board, roleRef } = useChessContext();
 
   return (
     <div className="w-full max-w-7xl mx-auto">
@@ -63,8 +65,9 @@ function Dashboard({ setIsPlaying }: { setIsPlaying: Dispatch<SetStateAction<boo
       <div className="mt-8 text-center max-w-4xl mx-auto">
         <div className="bg-gradient-to-r from-[var(--secondary)] via-[var(--muted)] to-[var(--secondary)] p-4 rounded-lg border border-[var(--border)] shadow-lg opacity-80">
           <p className="text-sm text-[var(--secondary-foreground)] italic">
-            "In the realm of Kingslayer, every move echoes through the halls of eternity. Strategy and valor shall
-            determine the victor of this noble contest."
+            "In the realm of Kingslayer, every move echoes through the halls of
+            eternity. Strategy and valor shall determine the victor of this
+            noble contest."
           </p>
           <div className="flex justify-center items-center mt-2 space-x-2">
             <div className="w-6 h-px bg-[var(--accent)]" />
@@ -74,7 +77,7 @@ function Dashboard({ setIsPlaying }: { setIsPlaying: Dispatch<SetStateAction<boo
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

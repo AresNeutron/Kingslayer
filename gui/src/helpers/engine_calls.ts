@@ -1,4 +1,4 @@
-export const url = process.env.NEXT_PUBLIC_BACKEND_URL;
+export const url = import.meta.env.VITE_PUBLIC_BACKEND_URL;
 
 // "/create/{user_color}/game/{game_id}"
 export const createGame = async (gameId: string, userIsWhite: boolean): Promise<void> => {

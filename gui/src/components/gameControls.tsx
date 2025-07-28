@@ -1,18 +1,17 @@
-"use client"
-import { type Dispatch, type SetStateAction, useState } from "react"
-import { createGame } from "@/helpers/engine_calls"
-import { useChessContext } from "@/hooks/ChessContext"
+import { type Dispatch, type SetStateAction, useState } from "react";
+import { createGame } from "../helpers/engine_calls";
+import { useChessContext } from "../hooks/useChessContext";
 
 function GameControls({
   setIsPlaying,
   isInDashboard = false,
 }: {
-  setIsPlaying: Dispatch<SetStateAction<boolean>>
-  isInDashboard?: boolean
+  setIsPlaying: Dispatch<SetStateAction<boolean>>;
+  isInDashboard?: boolean;
 }) {
-  const [isSelectingRole, setIsSelectingRole] = useState<boolean>(false)
-  const [isUserWhite, setIsUserWhite] = useState<boolean | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
+  const [isSelectingRole, setIsSelectingRole] = useState<boolean>(false);
+  const [isUserWhite, setIsUserWhite] = useState<boolean | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   const {
     gameIdRef,
@@ -23,40 +22,41 @@ function GameControls({
     gameMessage,
     setGameMessage,
     initializeWebSocket,
-  } = useChessContext()
+  } = useChessContext();
 
   const startGame = async (isWhite: boolean) => {
-    if (isCreating) return
-    setIsCreating(true)
-    setGameMessage("Forging the battlefield...")
+    if (isCreating) return;
+    setIsCreating(true);
+    setGameMessage("Forging the battlefield...");
     try {
-      const gameId = crypto.randomUUID()
-      await createGame(gameId, isWhite)
-      gameIdRef.current = gameId
-      roleRef.current = isWhite
-      await initializeWebSocket(gameId)
-      updateBitboardState(gameId)
-      setIsUserTurn(isWhite)
-      setIsPlaying(true)
-      setGameMessage("")
+      const gameId = crypto.randomUUID();
+      await createGame(gameId, isWhite);
+      gameIdRef.current = gameId;
+      roleRef.current = isWhite;
+      await initializeWebSocket(gameId);
+      updateBitboardState(gameId);
+      setIsUserTurn(isWhite);
+      setIsPlaying(true);
+      setGameMessage("");
     } catch (error) {
-      console.error("Error creating game:", error)
-      setGameMessage("The forge has failed us...")
-      gameIdRef.current = ""
-      roleRef.current = null
+      console.error("Error creating game:", error);
+      setGameMessage("The forge has failed us...");
+      gameIdRef.current = "";
+      roleRef.current = null;
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   const resetGame = () => {
-    setIsPlaying(false)
-    setIsSelectingRole(false)
-    setIsUserWhite(null)
-    gameIdRef.current = ""
-    roleRef.current = null
-    setGameMessage("")
-  }
+    console.log(isUserWhite);
+    setIsPlaying(false);
+    setIsSelectingRole(false);
+    setIsUserWhite(null);
+    gameIdRef.current = "";
+    roleRef.current = null;
+    setGameMessage("");
+  };
 
   // When in Dashboard mode, always show the game status panel
   if (isInDashboard) {
@@ -94,14 +94,17 @@ function GameControls({
               {/* Game Status Content */}
               {gameMessage.includes("Game Over") ? (
                 <div className="text-center text-[var(--secondary-foreground)] mb-4 italic">
-                  The battle has concluded. Prepare thy mind for another glorious encounter!
+                  The battle has concluded. Prepare thy mind for another
+                  glorious encounter!
                 </div>
               ) : (
                 <div className="space-y-3">
                   {/* Player Color Display */}
                   {roleRef.current !== null && (
                     <div className="flex items-center justify-center gap-2">
-                      <span className="text-[var(--secondary-foreground)]">Commanding:</span>
+                      <span className="text-[var(--secondary-foreground)]">
+                        Commanding:
+                      </span>
                       <span
                         className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold border-2 ${
                           roleRef.current
@@ -109,23 +112,28 @@ function GameControls({
                             : "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--border)]"
                         }`}
                       >
-                        {roleRef.current ? "⚪ WHITE LEGION" : "⚫ BLACK LEGION"}
+                        {roleRef.current
+                          ? "⚪ WHITE LEGION"
+                          : "⚫ BLACK LEGION"}
                       </span>
                     </div>
                   )}
 
                   {/* Turn Indicator */}
-                  {!gameMessage.includes("Started") && roleRef.current !== null && (
-                    <div className="text-center">
-                      <span
-                        className={`font-bold text-lg ${
-                          isUserTurn ? "text-[var(--accent)] animate-pulse" : "text-[var(--muted-foreground)]"
-                        }`}
-                      >
-                        {isUserTurn ? "⚔️ YOUR MOVE" : "🤔 ENEMY PLOTTING..."}
-                      </span>
-                    </div>
-                  )}
+                  {!gameMessage.includes("Started") &&
+                    roleRef.current !== null && (
+                      <div className="text-center">
+                        <span
+                          className={`font-bold text-lg ${
+                            isUserTurn
+                              ? "text-[var(--accent)] animate-pulse"
+                              : "text-[var(--muted-foreground)]"
+                          }`}
+                        >
+                          {isUserTurn ? "⚔️ YOUR MOVE" : "🤔 ENEMY PLOTTING..."}
+                        </span>
+                      </div>
+                    )}
                 </div>
               )}
 
@@ -147,7 +155,9 @@ function GameControls({
 
         {/* Additional Game Info Panel */}
         <div className="bg-gradient-to-b from-[var(--secondary)] to-[var(--muted)] p-4 rounded-lg border border-[var(--border)] shadow-lg">
-          <h4 className="text-lg font-bold text-[var(--primary-foreground)] mb-3 text-center">⚔️ BATTLE COMMANDS ⚔️</h4>
+          <h4 className="text-lg font-bold text-[var(--primary-foreground)] mb-3 text-center">
+            ⚔️ BATTLE COMMANDS ⚔️
+          </h4>
           <div className="space-y-2 text-sm text-[var(--secondary-foreground)]">
             <div className="flex items-center gap-2">
               <span className="text-[var(--accent)]">🎯</span>
@@ -172,7 +182,7 @@ function GameControls({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Original GameControls for landing page
@@ -180,10 +190,18 @@ function GameControls({
     <div className="mb-6 w-full max-w-2xl">
       <div className="bg-gradient-to-b from-[var(--secondary)] to-[var(--muted)] p-8 rounded-lg border-2 border-[var(--border)] shadow-2xl relative">
         {/* Decorative corner elements */}
-        <div className="absolute top-2 left-2 text-[var(--accent)] opacity-30">♜</div>
-        <div className="absolute top-2 right-2 text-[var(--accent)] opacity-30">♖</div>
-        <div className="absolute bottom-2 left-2 text-[var(--accent)] opacity-30">♛</div>
-        <div className="absolute bottom-2 right-2 text-[var(--accent)] opacity-30">♕</div>
+        <div className="absolute top-2 left-2 text-[var(--accent)] opacity-30">
+          ♜
+        </div>
+        <div className="absolute top-2 right-2 text-[var(--accent)] opacity-30">
+          ♖
+        </div>
+        <div className="absolute bottom-2 left-2 text-[var(--accent)] opacity-30">
+          ♛
+        </div>
+        <div className="absolute bottom-2 right-2 text-[var(--accent)] opacity-30">
+          ♕
+        </div>
 
         {isSelectingRole ? (
           <div className="flex flex-col items-center space-y-6 relative z-10">
@@ -200,9 +218,9 @@ function GameControls({
             <div className="flex space-x-6">
               <button
                 onClick={() => {
-                  setIsUserWhite(true)
-                  startGame(true)
-                  setIsSelectingRole(false)
+                  setIsUserWhite(true);
+                  startGame(true);
+                  setIsSelectingRole(false);
                 }}
                 disabled={isCreating}
                 className="group relative px-8 py-4 bg-gradient-to-b from-[var(--primary-foreground)] to-[var(--secondary-foreground)] text-[var(--primary)] font-bold text-lg rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -212,9 +230,9 @@ function GameControls({
 
               <button
                 onClick={() => {
-                  setIsUserWhite(false)
-                  startGame(false)
-                  setIsSelectingRole(false)
+                  setIsUserWhite(false);
+                  startGame(false);
+                  setIsSelectingRole(false);
                 }}
                 disabled={isCreating}
                 className="group relative px-8 py-4 bg-gradient-to-b from-[var(--primary)] to-[var(--secondary)] text-[var(--primary-foreground)] font-bold text-lg rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -228,16 +246,18 @@ function GameControls({
             <button
               className="group relative px-10 py-4 bg-gradient-to-b from-[var(--accent)] to-[var(--primary)] text-[var(--primary-foreground)] font-bold text-xl rounded-lg border-2 border-[var(--border)] shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 tracking-wide"
               onClick={() => {
-                setIsSelectingRole(true)
+                setIsSelectingRole(true);
               }}
             >
-              <span className="flex items-center gap-3">⚔️ FORGE NEW BATTLE ⚔️</span>
+              <span className="flex items-center gap-3">
+                ⚔️ FORGE NEW BATTLE ⚔️
+              </span>
             </button>
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default GameControls
+export default GameControls;
