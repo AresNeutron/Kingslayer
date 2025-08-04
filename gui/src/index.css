@@ -1,111 +1,107 @@
 @import "tailwindcss";
 
 :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: #2c1810; /* Deep castle brown */
-    --primary-foreground: #f4e4d0; /* Warm parchment */
-    --secondary: #3d2817; /* Rich wood brown */
-    --secondary-foreground: #e8d5c4; /* Light parchment */
-    --muted: #5c4033; /* Medium leather brown */
-    --muted-foreground: #c9b299; /* Aged paper */
-    --accent: #8b2635; /* Royal burgundy */
-    --accent-foreground: #f4e4d0; /* Warm parchment */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: #6b4423; /* Dark leather border */
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    --board-size: min(90vw, 520px);
-    --cell-size: calc(var(--board-size) / 8);
-    --piece-size: calc(var(--cell-size) * 0.9);
-  }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+  --background: #0f0a08; /* Deep warm black */
+  --foreground: #f4e4d0; /* Warm parchment */
+  --card: #1a1209; /* Dark leather brown */
+  --card-foreground: #e8d5c4; /* Light parchment */
+  --popover: #1a1209;
+  --popover-foreground: #e8d5c4;
+  --primary: #2c1810; /* Deep castle brown */
+  --primary-foreground: #f4e4d0; /* Warm parchment */
+  --secondary: #3d2817; /* Rich wood brown */
+  --secondary-foreground: #e8d5c4; /* Light parchment */
+  --muted: #2a1f17; /* Muted leather */
+  --muted-foreground: #c9b299; /* Aged paper */
+  --accent: #b8860b; /* Dark goldenrod */
+  --accent-foreground: #f4e4d0; /* Warm parchment */
+  --destructive: #8b2635; /* Dark burgundy */
+  --destructive-foreground: #f4e4d0;
+  --border: #4a3426; /* Medium leather border */
+  --input: #3d2817;
+  --ring: #b8860b;
 
+  /* Medieval specific colors */
+  --medieval-gold: #b8860b;
+  --medieval-gold-light: #daa520;
+  --medieval-burgundy: #8b2635;
+  --medieval-burgundy-light: #a0303f;
+  --medieval-brown-dark: #2c1810;
+  --medieval-brown-medium: #3d2817;
+  --medieval-brown-light: #4a3426;
+  --medieval-parchment: #f4e4d0;
+  --medieval-parchment-dark: #e8d5c4;
+
+  /* Board and game specific */
+  --board-size: min(90vw, 520px);
+  --cell-size: calc(var(--board-size) / 8);
+  --piece-size: calc(var(--cell-size) * 0.9);
+
+  /* Enhanced shadows for depth */
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-strong: 0 12px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(184, 134, 11, 0.3);
+}
+
+.dark {
+  /* Keep the same scheme for dark mode */
+  --background: #0f0a08;
+  --foreground: #f4e4d0;
+  --card: #1a1209;
+  --card-foreground: #e8d5c4;
+  --popover: #1a1209;
+  --popover-foreground: #e8d5c4;
+  --primary: #2c1810;
+  --primary-foreground: #f4e4d0;
+  --secondary: #3d2817;
+  --secondary-foreground: #e8d5c4;
+  --muted: #2a1f17;
+  --muted-foreground: #c9b299;
+  --accent: #b8860b;
+  --accent-foreground: #f4e4d0;
+  --destructive: #8b2635;
+  --destructive-foreground: #f4e4d0;
+  --border: #4a3426;
+  --input: #3d2817;
+  --ring: #b8860b;
+}
 
 body {
   font-family: "Cinzel", "Times New Roman", serif;
-  background: linear-gradient(135deg, var(--primary) 0%, #1a0f08 100%);
-  color: var(--primary-foreground);
+  background: linear-gradient(135deg, var(--background) 0%, #1a0f08 50%, var(--medieval-brown-dark) 100%);
+  color: var(--foreground);
+  min-height: 100vh;
 }
 
-/* Medieval-themed highlight colors */
+/* Enhanced medieval-themed highlight colors */
 .blue {
-  background-color: hsla(220, 60%, 35%, 0.4); /* Deep royal blue */
-  box-shadow: inset 0 0 0 2px hsla(220, 60%, 45%, 0.7);
-  border-radius: 2px;
+  background: linear-gradient(135deg, rgba(184, 134, 11, 0.3) 0%, rgba(218, 165, 32, 0.2) 100%);
+  box-shadow: inset 0 0 0 2px rgba(184, 134, 11, 0.6), 0 0 15px rgba(184, 134, 11, 0.3);
+  border-radius: 4px;
 }
 
 .yellow {
-  background-color: hsla(45, 85%, 55%, 0.4); /* Rich gold */
-  box-shadow: inset 0 0 0 2px hsla(45, 85%, 65%, 0.8);
-  border-radius: 2px;
+  background: linear-gradient(135deg, rgba(218, 165, 32, 0.4) 0%, rgba(255, 215, 0, 0.3) 100%);
+  box-shadow: inset 0 0 0 3px rgba(218, 165, 32, 0.8), 0 0 20px rgba(218, 165, 32, 0.4), inset 0 0 10px
+    rgba(255, 215, 0, 0.2);
+  border-radius: 4px;
+  animation: pulse 2s infinite;
 }
 
 .red {
-  background-color: hsla(355, 70%, 45%, 0.4); /* Deep crimson */
-  box-shadow: inset 0 0 0 2px hsla(355, 70%, 55%, 0.7);
-  border-radius: 2px;
+  background: linear-gradient(135deg, rgba(139, 38, 53, 0.4) 0%, rgba(160, 48, 63, 0.3) 100%);
+  box-shadow: inset 0 0 0 2px rgba(139, 38, 53, 0.7), 0 0 18px rgba(139, 38, 53, 0.4);
+  border-radius: 4px;
 }
 
 .violet {
-  background-color: hsla(280, 50%, 40%, 0.4); /* Royal purple */
-  box-shadow: inset 0 0 0 2px hsla(280, 50%, 50%, 0.7);
-  border-radius: 2px;
+  background: linear-gradient(135deg, rgba(107, 68, 35, 0.4) 0%, rgba(139, 38, 53, 0.3) 100%);
+  box-shadow: inset 0 0 0 2px rgba(107, 68, 35, 0.7), 0 0 15px rgba(107, 68, 35, 0.3);
+  border-radius: 4px;
 }
 
-/* Add subtle texture effect */
+/* Enhanced texture and atmosphere */
 body::before {
   content: "";
   position: fixed;
@@ -113,8 +109,48 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: radial-gradient(circle at 25% 25%, rgba(139, 38, 53, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(107, 68, 35, 0.1) 0%, transparent 50%);
+  background-image: radial-gradient(circle at 20% 20%, rgba(184, 134, 11, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(139, 38, 53, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(44, 24, 16, 0.1) 0%, transparent 70%);
   pointer-events: none;
   z-index: -1;
+}
+
+/* Custom scrollbar for medieval theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--medieval-brown-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--medieval-gold);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--medieval-gold-light);
+}
+
+/* Animation keyframes */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(184, 134, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(184, 134, 11, 0.5);
+  }
 }
