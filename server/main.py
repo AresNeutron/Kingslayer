@@ -67,7 +67,10 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
-        # add the rutes of production
+        "https://kingslayer-bay.vercel.app",
+        "https://vercel.com/fabio-quevedos-projects/kingslayer/9Ff4U8NMakaw6RoEafXJtLEp8gxS",
+        "https://kingslayer-fabio-quevedos-projects.vercel.app/",
+        "https://kingslayer-git-master-fabio-quevedos-projects.vercel.app/",
         ],
     allow_credentials=True,
     allow_methods=["*"],
