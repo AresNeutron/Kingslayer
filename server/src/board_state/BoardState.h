@@ -5,6 +5,7 @@
 #include "../constants/StaticData.h"
 #include "../constants/PSQ_tables.h"
 #include "../constants/Rays.h"
+#include "../constants/Helpers.h"
 #include "../precomputed_moves/non_sliding_moves/data.h"
 #include "../precomputed_moves/sliding_moves/data.h"
 

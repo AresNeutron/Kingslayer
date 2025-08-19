@@ -84,25 +84,10 @@ void BoardState::castling(int from_sq, int to_sq, bool reverse) {
     Piece king = reverse ? piece_at(to_sq) : piece_at(from_sq);
     Color sideToMove = colorOf(king);
 
-    int rook_from = NO_SQ, rook_to = NO_SQ;
-
-    if (to_sq - from_sq == +2) { // Enroque corto (King-side)
-        if (sideToMove == WHITE) {
-            rook_from = SQ_H1;  // 7
-            rook_to   = SQ_F1;  // 5
-        } else { // Caso de las negras
-            rook_from = SQ_H8;  // 63
-            rook_to   = SQ_F8;  // 61
-        }
-    } else if (to_sq - from_sq == -2) { // Enroque largo (Queen-side)
-        if (sideToMove == WHITE) {
-            rook_from = SQ_A1;  // 0
-            rook_to   = SQ_D1;  // 3
-        } else { // Caso de las negras
-            rook_from = SQ_A8;  // 56
-            rook_to   = SQ_D8;  // 59
-        }
-    } 
+    // Obtenemos las casillas de la torre
+    RookMoveData rook_move = get_castling_rook_move(from_sq, to_sq);
+    int rook_from = rook_move.from_sq;
+    int rook_to = rook_move.to_sq;
 
     if (reverse) {
         movePiece(rook_to, rook_from);
