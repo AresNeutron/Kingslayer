@@ -82,7 +82,7 @@ struct UndoInfo {
 
 struct MoveStream {
     int from_sq_1;
-    int to_sq1;
-    int from_sq2;
-    int to_sq2;
+    int to_sq_1;
+    int from_sq_2;
+    int to_sq_2;
 };

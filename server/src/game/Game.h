@@ -88,6 +88,7 @@ public:
     // MOVE GENERATION & EXECUTION
     // =========================
     std::vector<uint16_t> get_legal_moves(int sq);
+    void stream_move_data(uint16_t move_code);
     void make_move(uint16_t move_code);
     void unmake_move();
 
