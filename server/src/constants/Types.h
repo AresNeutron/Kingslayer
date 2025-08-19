@@ -86,3 +86,9 @@ struct MoveStream {
     int from_sq_2;
     int to_sq_2;
 };
+
+// Nueva estructura para agrupar los datos de la torre
+struct RookMoveData {
+    int from_sq;
+    int to_sq;
+};
