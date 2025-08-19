@@ -61,7 +61,9 @@ void Game::stream_move_data(uint16_t move_code) {
         }
         
         case CASTLING: {
-            // board_state.castling(from_sq, to_sq); // ok, here we have a problem
+            RookMoveData rook_move = get_castling_rook_move(from_sq, to_sq);
+            stream_data.from_sq_1 = rook_move.from_sq;
+            stream_data.to_sq_1 = rook_move.to_sq;
             break;
         }
         
