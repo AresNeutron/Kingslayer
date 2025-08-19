@@ -3,3 +3,5 @@
 #include "StaticData.h"
 
 RookMoveData get_castling_rook_move(int king_from, int king_to);
+
+std::array<int, 2> getCastlingPath(int rook_square);

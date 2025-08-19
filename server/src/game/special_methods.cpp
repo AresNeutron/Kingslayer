@@ -27,17 +27,6 @@ uint64_t Game::get_en_passant_bb(int from_sq) const {
 }
 
 
-std::array<int, 2> getCastlingPath(int rook_square) {
-    switch (rook_square) {
-        case 0:  return {2, 3}; // Torre en 0 para flanco de dama blanco
-        case 7:  return {5, 6}; // Torre en 7 para flanco de rey blanco
-        case 56: return {58, 59}; // Torre en 56 para flanco de dama negro
-        case 63: return {61, 62}; // Torre en 63 para flanco de rey negro
-    }
-    return {NO_SQ, NO_SQ};
-}
-
-
 std::array<uint16_t, 2> Game::get_castling_move(int king_sq) const {
     uint8_t right_of_king_to_castle = sideToMove ? 0b0011U : 0b1100U;
 
