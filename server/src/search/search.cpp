@@ -166,12 +166,15 @@ void Search::engine_moves(Game& game) {
     uint16_t best = find_best_move(game, MAX_DEPTH);
 
     game.make_move(best);
+    game.stream_move_data(best);
     
     // later we must implement an heuristic for promotion
     if (game.get_promotion_sq() != NO_SQ) {
         game.get_board_state().promote(game.get_promotion_sq()); // promote to queen by default
         game.set_promotion_sq(NO_SQ);
     }
+
+    // TODO: implemente stream data when engine promotes
 
     game.changeTurn();
 

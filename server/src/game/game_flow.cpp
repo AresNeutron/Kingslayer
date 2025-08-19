@@ -2,6 +2,7 @@
 
 void Game::user_moves(uint16_t move_code) {
     make_move(move_code);
+    stream_move_data(move_code);
 
     if (promotion_sq != NO_SQ) {
         std::cout << static_cast<int>(promotion_sq) << std::endl;
