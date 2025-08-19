@@ -91,12 +91,6 @@ public:
     // UTILITY & DEBUG
     // =========================
     
-    inline void printBoardArray() const {
-        for (int i = 0; i < 64; ++i) {
-            std::cout << static_cast<int>(board[i]) << std::endl;
-        }
-    }
-
     // used only for debugging
     // void printBoardArray() const {
     //     std::cout << "--- Chess Board ---" << std::endl;

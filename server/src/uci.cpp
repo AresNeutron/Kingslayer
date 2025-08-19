@@ -10,7 +10,7 @@ Game game;
 Search search;
 
 enum class Command {
-    UCI, ISREADY, UCINEWGAME, ENGINEMOVES, GETBOARD, GETMOVES, USERMOVES, PROMOTE, QUIT, UNKNOWN
+    UCI, ISREADY, UCINEWGAME, ENGINEMOVES, GETMOVES, USERMOVES, PROMOTE, QUIT, UNKNOWN
 };
 
 Command obtain_command(const std::string& token) {
@@ -19,7 +19,6 @@ Command obtain_command(const std::string& token) {
         {"isready", Command::ISREADY},
         {"ucinewgame", Command::UCINEWGAME},
         {"enginego", Command::ENGINEMOVES},
-        {"getboard", Command::GETBOARD},
         {"getmoves", Command::GETMOVES},
         {"promote", Command::PROMOTE},
         {"makemove", Command::USERMOVES},
@@ -59,12 +58,6 @@ void uci_loop() {
                 // disabled by now
             case Command::ENGINEMOVES:{
                 search.engine_moves(game);
-                break;
-            }
-
-            case Command::GETBOARD: {
-                game.get_board_state().printBoardArray();
-                std::cout << "readyok\n";
                 break;
             }
 
