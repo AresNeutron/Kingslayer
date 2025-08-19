@@ -78,3 +78,11 @@ struct UndoInfo {
     int8_t prev_en_passant_sq;
     uint8_t prev_castling_rights;
 };
+
+
+struct MoveStream {
+    int from_sq_1;
+    int to_sq1;
+    int from_sq2;
+    int to_sq2;
+};
