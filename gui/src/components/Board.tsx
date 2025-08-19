@@ -7,28 +7,27 @@ function Board() {
 
   return (
     <div className="relative animate-in zoom-in-95 duration-1000">
-      {/* Medieval board frame with enhanced decorative elements */}
-      <div className="absolute -inset-6 bg-gradient-to-br from-[var(--card)] via-[var(--muted)] to-[var(--secondary)] rounded-2xl border-4 border-[var(--border)] shadow-[var(--shadow-strong)]">
-        {/* Corner decorations */}
-        <div className="absolute -top-2 -left-2 text-3xl text-[var(--accent)] opacity-60 animate-pulse">♜</div>
-        <div className="absolute -top-2 -right-2 text-3xl text-[var(--accent)] opacity-60 animate-pulse delay-500">
+      <div className="absolute -inset-3 sm:-inset-6 bg-gradient-to-br from-[var(--card)] via-[var(--muted)] to-[var(--secondary)] rounded-xl sm:rounded-2xl border-2 sm:border-4 border-[var(--border)] shadow-[var(--shadow-strong)]">
+        <div className="absolute -top-1 sm:-top-2 -left-1 sm:-left-2 text-xl sm:text-3xl text-[var(--accent)] opacity-60 animate-pulse">
+          ♜
+        </div>
+        <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 text-xl sm:text-3xl text-[var(--accent)] opacity-60 animate-pulse delay-500">
           ♖
         </div>
-        <div className="absolute -bottom-2 -left-2 text-3xl text-[var(--accent)] opacity-60 animate-pulse delay-1000">
+        <div className="absolute -bottom-1 sm:-bottom-2 -left-1 sm:-left-2 text-xl sm:text-3xl text-[var(--accent)] opacity-60 animate-pulse delay-1000">
           ♛
         </div>
-        <div className="absolute -bottom-2 -right-2 text-3xl text-[var(--accent)] opacity-60 animate-pulse delay-1500">
+        <div className="absolute -bottom-1 sm:-bottom-2 -right-1 sm:-right-2 text-xl sm:text-3xl text-[var(--accent)] opacity-60 animate-pulse delay-1500">
           ♕
         </div>
 
         {/* Medieval border pattern */}
-        <div className="absolute inset-2 border-2 border-[var(--accent)] opacity-40 rounded-xl shadow-[var(--shadow-glow)]"></div>
+        <div className="absolute inset-1 sm:inset-2 border border-2 border-[var(--accent)] opacity-40 rounded-lg sm:rounded-xl shadow-[var(--shadow-glow)]"></div>
       </div>
 
-      {/* Main chess board - optimized for horizontal layout */}
       <div
         className="w-[var(--board-size)] h-[var(--board-size)] grid grid-cols-8 grid-rows-8 
-                   border-4 border-[var(--accent)] rounded-xl overflow-hidden relative 
+                   border-2 sm:border-4 border-[var(--accent)] rounded-lg sm:rounded-xl overflow-hidden relative 
                    shadow-[var(--shadow-strong)] bg-gradient-to-br from-[var(--medieval-brown-medium)] to-[var(--medieval-brown-dark)]"
         style={{
           boxShadow: `
@@ -81,19 +80,18 @@ function Board() {
         <Pieces />
       </div>
 
-      {/* Medieval coordinate labels - enhanced styling */}
-      <div className="absolute -left-10 top-0 h-full flex flex-col justify-around text-[var(--muted-foreground)] font-bold">
+      <div className="absolute -left-6 sm:-left-10 top-0 h-full flex flex-col justify-around text-[var(--muted-foreground)] font-bold">
         {(roleRef.current ? ["1", "2", "3", "4", "5", "6", "7", "8"] : ["8", "7", "6", "5", "4", "3", "2", "1"]).map(
           (num, i) => (
-            <span key={i} className="text-lg drop-shadow-sm">
+            <span key={i} className="text-sm sm:text-lg drop-shadow-sm">
               {num}
             </span>
           ),
         )}
       </div>
-      <div className="absolute -bottom-10 left-0 w-full flex justify-around text-[var(--muted-foreground)] font-bold">
+      <div className="absolute -bottom-6 sm:-bottom-10 left-0 w-full flex justify-around text-[var(--muted-foreground)] font-bold">
         {["a", "b", "c", "d", "e", "f", "g", "h"].map((letter, i) => (
-          <span key={i} className="text-lg drop-shadow-sm">
+          <span key={i} className="text-sm sm:text-lg drop-shadow-sm">
             {letter}
           </span>
         ))}

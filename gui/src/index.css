@@ -32,16 +32,15 @@
   --medieval-parchment: #f4e4d0;
   --medieval-parchment-dark: #e8d5c4;
 
-  /* Board and game specific */
-  --board-size: min(90vw, 520px);
+  /* Enhanced responsive board and game sizing for better mobile fit */
+  --board-size: min(95vw, 90vh, 520px);
   --cell-size: calc(var(--board-size) / 8);
-  --piece-size: calc(var(--cell-size) * 0.9);
+  --piece-size: calc(var(--cell-size) * 0.85);
 
-  /* Enhanced shadows for depth */
-  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-strong: 0 12px 32px rgba(0, 0, 0, 0.6);
-  --shadow-glow: 0 0 20px rgba(184, 134, 11, 0.3);
+  /* Mobile-specific sizing */
+  --mobile-board-size: min(90vw, 85vh);
+  --mobile-cell-size: calc(var(--mobile-board-size) / 8);
+  --mobile-piece-size: calc(var(--mobile-cell-size) * 0.8);
 }
 
 .dark {
@@ -152,5 +151,64 @@ body::before {
   }
   50% {
     box-shadow: 0 0 30px rgba(184, 134, 11, 0.5);
+  }
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 768px) {
+  :root {
+    --board-size: var(--mobile-board-size);
+    --cell-size: var(--mobile-cell-size);
+    --piece-size: var(--mobile-piece-size);
+  }
+
+  /* Smaller text sizes for mobile */
+  .mobile-title {
+    font-size: 2.5rem !important;
+  }
+
+  .mobile-subtitle {
+    font-size: 1.25rem !important;
+  }
+
+  .mobile-text {
+    font-size: 0.875rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --board-size: min(85vw, 80vh);
+    --cell-size: calc(var(--board-size) / 8);
+    --piece-size: calc(var(--cell-size) * 0.75);
+  }
+
+  .mobile-title {
+    font-size: 2rem !important;
+  }
+
+  .mobile-subtitle {
+    font-size: 1.125rem !important;
+  }
+}
+
+/* Added extra small screen support for very small devices */
+@media (max-width: 360px) {
+  :root {
+    --board-size: min(80vw, 75vh);
+    --cell-size: calc(var(--board-size) / 8);
+    --piece-size: calc(var(--cell-size) * 0.7);
+  }
+
+  .mobile-title {
+    font-size: 1.75rem !important;
+  }
+
+  .mobile-subtitle {
+    font-size: 1rem !important;
+  }
+
+  .mobile-text {
+    font-size: 0.75rem !important;
   }
 }

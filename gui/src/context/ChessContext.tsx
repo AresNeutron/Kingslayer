@@ -1,160 +1,156 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
-import { getBoard, getMoves } from "../helpers/engine_calls";
-import { useWebSocket } from "../hooks/useWebSocket";
-import { ChessContext } from "../hooks/useChessContext";
+"use client"
 
-const ContextProvider = ({ children }: { children: ReactNode }) => {
-  const roleRef = useRef(null);
-  const gameIdRef = useRef("");
-  const [isUserTurn, setIsUserTurn] = useState<boolean>(true);
-  const [board, setBoard] = useState<number[]>([]);
-  const [highlight, setHighlight] = useState<number[]>([]);
-  const [threats, setThreats] = useState<bigint>(0n);
-  const [selectedSquare, setSelectedSquare] = useState<number | null>(null);
-  const [isPromoting, setIsPromoting] = useState<boolean>(false);
-  const [gameMessage, setGameMessage] = useState<string>("");
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
+import { getBoard, getMoves } from "../helpers/engine_calls"
+import { useWebSocket } from "../hooks/useWebSocket"
+import { ChessContext } from "../hooks/useChessContext"
 
-  const promotionRef = useRef<number | null>(null); // Para almanenar la casilla del peón a promover,
-  const socketRef = useRef<WebSocket | null>(null);
+const ChessProvider = ({ children }: { children: ReactNode }) => {
+  const roleRef = useRef(null)
+  const gameIdRef = useRef("")
+  const [isUserTurn, setIsUserTurn] = useState<boolean>(true)
+  const [board, setBoard] = useState<number[]>([])
+  const [highlight, setHighlight] = useState<number[]>([])
+  const [threats, setThreats] = useState<bigint>(0n)
+  const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
+  const [isPromoting, setIsPromoting] = useState<boolean>(false)
+  const [gameMessage, setGameMessage] = useState<string>("")
+
+  const promotionRef = useRef<number | null>(null) // Para almanenar la casilla del peón a promover,
+  const socketRef = useRef<WebSocket | null>(null)
 
   // Hook WebSocket optimizado
-  const { connect, send, isConnected: wsConnected } = useWebSocket();
+  const { connect, send, isConnected: wsConnected } = useWebSocket()
 
   // These are the possible server messages: "none", "check", "checkmate", "stalemate", "promotion"
   const handleMessage = useCallback((messageEvent: MessageEvent) => {
     try {
-      const { event: eventType, data } = JSON.parse(messageEvent.data);
-      console.log("WebSocket event:", eventType);
+      const { event: eventType, data } = JSON.parse(messageEvent.data)
+      console.log("WebSocket event:", eventType)
 
       switch (eventType) {
         case "promotion":
-          setIsPromoting(true);
-          promotionRef.current = data.pawn_square;
-          break;
+          setIsPromoting(true)
+          promotionRef.current = data.pawn_square
+          break
 
         case "none":
-          setIsUserTurn((prevState) => !prevState);
-          setThreats(0n);
-          setGameMessage("");
-          break;
+          setIsUserTurn((prevState) => !prevState)
+          setThreats(0n)
+          setGameMessage("")
+          break
 
         case "check":
-          setThreats(data);
-          setGameMessage("CHECK!");
-          setIsUserTurn((prevState) => !prevState);
-          break;
+          setThreats(data)
+          setGameMessage("CHECK!")
+          setIsUserTurn((prevState) => !prevState)
+          break
 
         case "checkmate":
-          setGameMessage("Game Over");
-          setIsUserTurn(false);
-          break;
+          setGameMessage("Game Over")
+          setIsUserTurn(false)
+          break
 
         case "stalemate":
-          setGameMessage("Game Over. It's a match");
-          setIsUserTurn(false);
-          break;
+          setGameMessage("Game Over. It's a match")
+          setIsUserTurn(false)
+          break
 
         default:
-          console.warn("Evento WebSocket desconocido:", eventType);
+          console.warn("Evento WebSocket desconocido:", eventType)
       }
 
       // Actualizar tablero después de procesar el mensaje
-      updateBitboardState(gameIdRef.current);
+      updateBitboardState(gameIdRef.current)
     } catch (err) {
-      console.error("Error parseando mensaje WebSocket:", err);
+      console.error("Error parseando mensaje WebSocket:", err)
     }
-  }, []);
+  }, [])
 
   const initializeWebSocket = useCallback(
     async (gameId: string) => {
       try {
-        const ws = await connect(gameId);
-        socketRef.current = ws;
+        const ws = await connect(gameId)
+        socketRef.current = ws
 
         // Configurar handlers
-        ws.onmessage = handleMessage;
+        ws.onmessage = handleMessage
 
-        return ws;
+        return ws
       } catch (error) {
-        console.error("Error conectando WebSocket:", error);
-        setGameMessage("Error de conexión");
-        throw error;
+        console.error("Error conectando WebSocket:", error)
+        setGameMessage("Error de conexión")
+        throw error
       }
     },
-    [connect, handleMessage]
-  );
+    [connect, handleMessage],
+  )
 
   useEffect(() => {
-    console.log("use effect is being triggered");
+    console.log("use effect is being triggered")
     if (!isUserTurn) {
-      const success = send({ event: "engine_moves", data: null });
+      const success = send({ event: "engine_moves", data: null })
       if (!success) {
-        console.warn("Could not call server to move engine");
+        console.warn("Could not call server to move engine")
       }
     }
-  }, [isUserTurn, send]);
+  }, [isUserTurn, send])
 
   const updateBitboardState = async (gameId: string) => {
     if (gameId) {
-      console.log("Board Updated");
-      const board = await getBoard(gameId);
-      setBoard(board);
+      console.log("Board Updated")
+      const board = await getBoard(gameId)
+      setBoard(board)
     }
-  };
+  }
 
   const handleLightState = async (square: number) => {
     if (gameIdRef.current) {
-      const newLighted = await getMoves(gameIdRef.current, square);
-      setHighlight(newLighted);
+      const newLighted = await getMoves(gameIdRef.current, square)
+      setHighlight(newLighted)
     }
-  };
+  }
 
   const handlePromotionState = useCallback(
     (promotion: number) => {
       if (!wsConnected()) {
-        setGameMessage("No hay conexión");
-        return;
+        setGameMessage("No hay conexión")
+        return
       }
 
       const success = send({
         event: "promotion",
         data: promotion % 6, // divide by 6 to ensure it's a piece type
-      });
+      })
 
       if (success) {
-        setIsPromoting(false);
-        promotionRef.current = null;
+        setIsPromoting(false)
+        promotionRef.current = null
       }
     },
-    [send, wsConnected]
-  );
+    [send, wsConnected],
+  )
 
   const handleMoveState = useCallback(
     (move_code: number) => {
       if (!wsConnected()) {
-        setGameMessage("No hay conexión");
+        setGameMessage("No hay conexión")
       }
 
       const success = send({
         event: "user_moves",
         data: move_code,
-      });
+      })
 
       if (success) {
-        setHighlight([]);
-        setSelectedSquare(null);
-        setThreats(0n);
-        setGameMessage("");
+        setHighlight([])
+        setSelectedSquare(null)
+        setThreats(0n)
+        setGameMessage("")
       }
     },
-    [send, wsConnected]
-  );
+    [send, wsConnected],
+  )
 
   return (
     <ChessContext.Provider
@@ -179,9 +175,10 @@ const ContextProvider = ({ children }: { children: ReactNode }) => {
         initializeWebSocket,
       }}
     >
-      {children} {/* ← Se debe renderizar children aquí */}
+      {children}
     </ChessContext.Provider>
-  );
-};
+  )
+}
 
-export default ContextProvider;
+export default ChessProvider
+export { ChessProvider }
