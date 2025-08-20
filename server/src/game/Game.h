@@ -102,7 +102,7 @@ public:
     // USER INTERFACE METHODS
     // =========================
     void user_moves(uint16_t move_code);
-    void resolve_promotion(int promotion);
+    void user_promotion(int promotion);
 };
 
 #endif
