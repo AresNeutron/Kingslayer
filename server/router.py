@@ -30,21 +30,6 @@ async def create_game(
     return {"game_id": game_id}
 
 
-@engine_router.get("/board/{game_id}")
-async def get_game_state(
-    game_id: str,
-    game_states: Dict[str, GameManager] = Depends(get_game_states), 
-    game_states_lock: Lock = Depends(get_game_states_lock)
-):
-    async with game_states_lock:
-        gm = game_states.get(game_id)
-    if not gm:
-        raise HTTPException(status_code=404, detail=f"Game {game_id} not found")
-
-    board = await gm.get_board()
-    return {"board": board}
-
-
 @engine_router.get("/game/{game_id}/moves/{square}")
 async def get_valid_moves(
     game_id: str,
