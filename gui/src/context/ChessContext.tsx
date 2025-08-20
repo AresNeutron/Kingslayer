@@ -1,9 +1,11 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
-import { getBoard, getMoves } from "../helpers/engine_calls"
+import { getMoves } from "../helpers/engine_calls"
 import { useWebSocket } from "../hooks/useWebSocket"
 import { ChessContext } from "../hooks/useChessContext"
+import type { ServerResponse } from "../types/types"
+import { Piece } from "../helpers/constants"
 
 const ChessProvider = ({ children }: { children: ReactNode }) => {
   const roleRef = useRef(null)
@@ -22,28 +24,73 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
   // Hook WebSocket optimizado
   const { connect, send, isConnected: wsConnected } = useWebSocket()
 
-  // These are the possible server messages: "none", "check", "checkmate", "stalemate", "promotion"
+  // Update board state based on move_data from ServerResponse
+  const updateBoardFromMoveData = useCallback((response: ServerResponse) => {
+    if (!response.move_data) return
+
+    const [from_sq_1, to_sq_1, from_sq_2, to_sq_2] = response.move_data
+    
+    setBoard((prevBoard) => {
+      const newBoard = [...prevBoard]
+      
+      // Handle primary piece movement (from_sq_2 -> to_sq_2)
+      if (from_sq_2 !== -1 && to_sq_2 !== -1) {
+        const piece = newBoard[from_sq_2]
+        newBoard[to_sq_2] = piece
+        newBoard[from_sq_2] = Piece.NO_PIECE
+      }
+      
+      // Handle secondary movement/capture (from_sq_1 -> to_sq_1)
+      if (from_sq_1 !== -1) {
+        if (to_sq_1 === -1) {
+          // Capture: remove piece at from_sq_1
+          newBoard[from_sq_1] = Piece.NO_PIECE
+        } else {
+          // Castling: move rook from from_sq_1 to to_sq_1
+          const rook = newBoard[from_sq_1]
+          newBoard[to_sq_1] = rook
+          newBoard[from_sq_1] = Piece.NO_PIECE
+        }
+      }
+      
+      // Handle promotion
+      if (response.promotion_pc !== undefined && to_sq_2 !== -1) {
+        newBoard[to_sq_2] = response.promotion_pc
+      }
+      
+      return newBoard
+    })
+  }, [])
+
   const handleMessage = useCallback((messageEvent: MessageEvent) => {
     try {
-      const { event: eventType, data } = JSON.parse(messageEvent.data)
-      console.log("WebSocket event:", eventType)
+      const response: ServerResponse = JSON.parse(messageEvent.data)
+      console.log("WebSocket response:", response)
 
-      switch (eventType) {
+      // Update board based on move data
+      updateBoardFromMoveData(response)
+
+      // Handle game events
+      switch (response.event) {
         case "promotion":
           setIsPromoting(true)
-          promotionRef.current = data.pawn_square
+          promotionRef.current = response.event_data
           break
 
         case "none":
-          setIsUserTurn((prevState) => !prevState)
+          if (response.status === "nextturn") {
+            setIsUserTurn((prevState) => !prevState)
+          }
           setThreats(0n)
           setGameMessage("")
           break
 
         case "check":
-          setThreats(data)
+          setThreats(BigInt(response.event_data))
           setGameMessage("CHECK!")
-          setIsUserTurn((prevState) => !prevState)
+          if (response.status === "nextturn") {
+            setIsUserTurn((prevState) => !prevState)
+          }
           break
 
         case "checkmate":
@@ -57,15 +104,12 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
           break
 
         default:
-          console.warn("Evento WebSocket desconocido:", eventType)
+          console.warn("Unknown WebSocket event:", response.event)
       }
-
-      // Actualizar tablero después de procesar el mensaje
-      updateBitboardState(gameIdRef.current)
     } catch (err) {
-      console.error("Error parseando mensaje WebSocket:", err)
+      console.error("Error parsing WebSocket message:", err)
     }
-  }, [])
+  }, [updateBoardFromMoveData])
 
   const initializeWebSocket = useCallback(
     async (gameId: string) => {
@@ -96,13 +140,6 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isUserTurn, send])
 
-  const updateBitboardState = async (gameId: string) => {
-    if (gameId) {
-      console.log("Board Updated")
-      const board = await getBoard(gameId)
-      setBoard(board)
-    }
-  }
 
   const handleLightState = async (square: number) => {
     if (gameIdRef.current) {
@@ -160,7 +197,6 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         roleRef,
         isUserTurn,
         setIsUserTurn,
-        updateBitboardState,
         highlight,
         threats,
         handleLightState,

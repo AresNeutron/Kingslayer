@@ -6,7 +6,6 @@ export interface ChessContextValue {
   roleRef: RefObject<boolean | null>;
   isUserTurn: boolean;
   setIsUserTurn: Dispatch<SetStateAction<boolean>>;
-  updateBitboardState: (gameId: string) => Promise<void>;
   highlight: number[];
   threats: bigint;
   handleLightState: (square: number) => Promise<void>;
