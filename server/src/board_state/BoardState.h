@@ -78,7 +78,7 @@ public:
 
     uint64_t getPseudoLegalMoves(int fromSq) const;
     void castling(int from_sq, int to_sq, bool reverse = false );
-    void promote(int promotion_sq, Type promotion = QUEEN);
+    Piece promote(int promotion_sq, Type promotion = QUEEN);
 
     // =========================
     // ATTACK & THREAT QUERIES
