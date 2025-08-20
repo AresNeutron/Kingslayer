@@ -34,6 +34,7 @@ void Game::user_promotion(int promotion) {
     uint64_t threats = detect_check();
     detect_game_over();
 
+    std::cout << "move_data -1 -1 -1 " << promotion_sq << std::endl;
     std::cout << "promotion_pc " << static_cast<int>(promotion_pc) << std::endl;
     std::cout << "event_data " << threats << std::endl;
     std::cout << "event " << eventMessages[game_event] << std::endl;
