@@ -14,6 +14,15 @@ export interface ChessContextValue {
   setSelectedSquare: Dispatch<SetStateAction<number | null>>;
   handleMoveState: (move_code: number) => void;
   isPromoting: boolean;
+  isAnimating: boolean;
+  animatingPieces: {
+    [key: string]: {
+      piece: number;
+      fromSquare: number;
+      toSquare: number;
+      startTime: number;
+    }
+  };
   socketRef: RefObject<WebSocket | null>;
   gameMessage: string;
   setGameMessage: Dispatch<SetStateAction<string>>;

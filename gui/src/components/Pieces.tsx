@@ -1,13 +1,47 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Piece } from "../helpers/constants"
 import { useChessContext } from "../hooks/useChessContext"
 
 function Pieces() {
-  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState } =
+  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState, isAnimating, animatingPieces } =
     useChessContext()
 
+  // Force re-renders during animations
+  const [, setAnimationFrame] = useState(0)
+
+  useEffect(() => {
+    if (isAnimating && Object.keys(animatingPieces).length > 0) {
+      const animateFrame = () => {
+        setAnimationFrame(prev => prev + 1)
+        requestAnimationFrame(animateFrame)
+      }
+      const frameId = requestAnimationFrame(animateFrame)
+      
+      // Stop animation loop when pieces finish animating
+      const stopTimer = setTimeout(() => {
+        cancelAnimationFrame(frameId)
+      }, 320) // Slightly longer than animation duration
+
+      return () => {
+        cancelAnimationFrame(frameId)
+        clearTimeout(stopTimer)
+      }
+    }
+  }, [isAnimating, animatingPieces])
+
+  // Helper function to calculate piece position
+  function getSquarePosition(squareIndex: number) {
+    const col = squareIndex % 8
+    const row = roleRef.current ? 7 - Math.floor(squareIndex / 8) : Math.floor(squareIndex / 8)
+    return { col, row }
+  }
+
   function handleClick(squareIndex: number, piece: number) {
+    // Block interactions during animations
+    if (isAnimating) return
+    
     const isWhite = piece > Piece.BLACK_ROOK
     const canUserMove = roleRef.current === isWhite
 
@@ -39,8 +73,15 @@ function Pieces() {
       <div className="relative w-full h-full">
         {board.map((piece, i) => {
           if (piece !== Piece.NO_PIECE) {
-            const col = i % 8
-            const row = roleRef.current ? 7 - Math.floor(i / 8) : Math.floor(i / 8)
+            // Check if this piece is currently animating from this square
+            const isAnimatingFromHere = Object.values(animatingPieces).some(
+              animPiece => animPiece.fromSquare === i
+            )
+            
+            // Don't render pieces that are animating from this position
+            if (isAnimatingFromHere) return null
+            
+            const { col, row } = getSquarePosition(i)
             const isWhite = piece > Piece.BLACK_ROOK
             const isSelected = selectedSquare === i
 
@@ -140,6 +181,63 @@ function Pieces() {
             )
           }
           return null
+        })}
+        
+        {/* Render animating pieces */}
+        {Object.entries(animatingPieces).map(([animId, animPiece]) => {
+          const fromPos = getSquarePosition(animPiece.fromSquare)
+          const toPos = getSquarePosition(animPiece.toSquare)
+          const isWhite = animPiece.piece > Piece.BLACK_ROOK
+          
+          // Calculate animation progress (0 to 1)
+          const elapsed = Date.now() - animPiece.startTime
+          const progress = Math.min(elapsed / 300, 1) // 300ms animation duration
+          
+          // Calculate current position
+          const currentCol = fromPos.col + (toPos.col - fromPos.col) * progress
+          const currentRow = fromPos.row + (toPos.row - fromPos.row) * progress
+          
+          return (
+            <div
+              key={animId}
+              className="absolute transition-none flex items-center justify-center pointer-events-none z-30"
+              style={{
+                width: "var(--cell-size)",
+                height: "var(--cell-size)",
+                top: `calc(${currentRow} * var(--cell-size))`,
+                left: `calc(${currentCol} * var(--cell-size))`,
+                transform: `translateZ(0)`, // Force hardware acceleration
+              }}
+            >
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Background glow for white pieces during animation */}
+                {isWhite && (
+                  <div
+                    className="absolute inset-2 rounded-full opacity-20"
+                    style={{
+                      background: "radial-gradient(circle, #f4e4d0 0%, transparent 70%)",
+                    }}
+                  />
+                )}
+
+                <img
+                  src={`/images/${animPiece.piece}.png`}
+                  alt={`Animating chess piece ${animPiece.piece}`}
+                  className={`object-contain relative z-10
+                    ${isWhite ? "brightness-110 contrast-110" : "brightness-95"}`}
+                  style={{
+                    width: "var(--piece-size)",
+                    height: "var(--piece-size)",
+                    filter: `
+                      ${isWhite ? "drop-shadow(0 0 2px rgba(244,228,208,0.8))" : ""}
+                      saturate(1.1)
+                      contrast(1.05)
+                    `,
+                  }}
+                />
+              </div>
+            </div>
+          )
         })}
       </div>
     </div>

@@ -11,7 +11,16 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
   const roleRef = useRef(null)
   const gameIdRef = useRef("")
   const [isUserTurn, setIsUserTurn] = useState<boolean>(true)
-  const [board, setBoard] = useState<number[]>(initialBoard)
+  const boardRef = useRef<number[]>(initialBoard)
+  const [isAnimating, setIsAnimating] = useState<boolean>(false)
+  const [animatingPieces, setAnimatingPieces] = useState<{
+    [key: string]: {
+      piece: number;
+      fromSquare: number;
+      toSquare: number;
+      startTime: number;
+    }
+  }>({})
   const [highlight, setHighlight] = useState<number[]>([])
   const [threats, setThreats] = useState<bigint>(0n)
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
@@ -24,51 +33,89 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
   // Hook WebSocket optimizado
   const { connect, send, isConnected: wsConnected } = useWebSocket()
 
-  // Update board state based on move_data from ServerResponse
-  const updateBoardFromMoveData = useCallback((response: ServerResponse) => {
-    if (!response.move_data) return
+  // Calculate board updates without applying them (for post-animation)
+  const calculateBoardUpdates = useCallback((response: ServerResponse) => {
+    if (!response.move_data) return boardRef.current
 
     const [from_sq_1, to_sq_1, from_sq_2, to_sq_2] = response.move_data
+    const newBoard = [...boardRef.current]
     
-    setBoard((prevBoard) => {
-      const newBoard = [...prevBoard]
-      
-      // Handle primary piece movement (from_sq_2 -> to_sq_2)
-      if (from_sq_2 !== -1 && to_sq_2 !== -1) {
-        const piece = newBoard[from_sq_2]
-        newBoard[to_sq_2] = piece
-        newBoard[from_sq_2] = Piece.NO_PIECE
+    // Handle primary piece movement (from_sq_2 -> to_sq_2)
+    if (from_sq_2 !== -1 && to_sq_2 !== -1) {
+      const piece = newBoard[from_sq_2]
+      newBoard[to_sq_2] = piece
+      newBoard[from_sq_2] = Piece.NO_PIECE
+    }
+    
+    // Handle secondary movement/capture (from_sq_1 -> to_sq_1)
+    if (from_sq_1 !== -1) {
+      if (to_sq_1 === -1) {
+        // Capture: remove piece at from_sq_1
+        newBoard[from_sq_1] = Piece.NO_PIECE
+      } else {
+        // Castling: move rook from from_sq_1 to to_sq_1
+        const rook = newBoard[from_sq_1]
+        newBoard[to_sq_1] = rook
+        newBoard[from_sq_1] = Piece.NO_PIECE
       }
-      
-      // Handle secondary movement/capture (from_sq_1 -> to_sq_1)
-      if (from_sq_1 !== -1) {
-        if (to_sq_1 === -1) {
-          // Capture: remove piece at from_sq_1
-          newBoard[from_sq_1] = Piece.NO_PIECE
-        } else {
-          // Castling: move rook from from_sq_1 to to_sq_1
-          const rook = newBoard[from_sq_1]
-          newBoard[to_sq_1] = rook
-          newBoard[from_sq_1] = Piece.NO_PIECE
-        }
-      }
-      
-      // Handle promotion
-      if (response.promotion_pc !== undefined && to_sq_2 !== -1) {
-        newBoard[to_sq_2] = response.promotion_pc
-      }
-      
-      return newBoard
-    })
+    }
+    
+    // Handle promotion
+    if (response.promotion_pc !== undefined && to_sq_2 !== -1) {
+      newBoard[to_sq_2] = response.promotion_pc
+    }
+    
+    return newBoard
   }, [])
+
+  // Start translation animation
+  const startTranslationAnimation = useCallback((response: ServerResponse) => {
+    if (!response.move_data) return
+
+    setIsAnimating(true)
+    const [from_sq_1, to_sq_1, from_sq_2, to_sq_2] = response.move_data
+    const currentTime = Date.now()
+    const newAnimatingPieces: typeof animatingPieces = {}
+
+    // Primary piece animation (from_sq_2 -> to_sq_2)
+    if (from_sq_2 !== -1 && to_sq_2 !== -1) {
+      const piece = boardRef.current[from_sq_2]
+      newAnimatingPieces[`primary_${currentTime}`] = {
+        piece,
+        fromSquare: from_sq_2,
+        toSquare: to_sq_2,
+        startTime: currentTime
+      }
+    }
+
+    // Secondary piece animation (castling rook)
+    if (from_sq_1 !== -1 && to_sq_1 !== -1) {
+      const rook = boardRef.current[from_sq_1]
+      newAnimatingPieces[`secondary_${currentTime}`] = {
+        piece: rook,
+        fromSquare: from_sq_1,
+        toSquare: to_sq_1,
+        startTime: currentTime
+      }
+    }
+
+    setAnimatingPieces(newAnimatingPieces)
+
+    // Complete animation after 300ms
+    setTimeout(() => {
+      boardRef.current = calculateBoardUpdates(response)
+      setAnimatingPieces({})
+      setIsAnimating(false)
+    }, 300)
+  }, [calculateBoardUpdates])
 
   const handleMessage = useCallback((messageEvent: MessageEvent) => {
     try {
       const response: ServerResponse = JSON.parse(messageEvent.data)
       console.log("WebSocket response:", response)
 
-      // Update board based on move data
-      updateBoardFromMoveData(response)
+      // Start animation instead of immediate board update
+      startTranslationAnimation(response)
 
       // Handle game events
       switch (response.event) {
@@ -109,7 +156,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     } catch (err) {
       console.error("Error parsing WebSocket message:", err)
     }
-  }, [updateBoardFromMoveData])
+  }, [startTranslationAnimation])
 
   const initializeWebSocket = useCallback(
     async (gameId: string) => {
@@ -130,10 +177,16 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     [connect, handleMessage],
   )
 
+  // this useEffect works to call the engine move
+  // but sometimes the console triggers the warn message
+  // gotta find a way to fix it
   useEffect(() => {
     console.log("use effect is being triggered")
     if (!isUserTurn) {
-      const success = send({ event: "engine_moves", data: null })
+      let success;
+      setTimeout(() => {
+        {success = send({ event: "engine_moves", data: null })}
+      }, 500) 
       if (!success) {
         console.warn("Could not call server to move engine")
       }
@@ -192,7 +245,9 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ChessContext.Provider
       value={{
-        board,
+        board: boardRef.current,
+        isAnimating,
+        animatingPieces,
         gameIdRef,
         roleRef,
         isUserTurn,
