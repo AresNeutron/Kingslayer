@@ -15,3 +15,11 @@ export interface GameMessage {
   event: string,
   data: number | null
 }
+
+export interface ServerResponse {
+  move_data?: [number, number, number, number];
+  promotion_pc?: number;
+  event_data: number;
+  event: "none" | "check" | "checkmate" | "stalemate" | "promotion";
+  status: "nextturn" | "awaiting";
+}
