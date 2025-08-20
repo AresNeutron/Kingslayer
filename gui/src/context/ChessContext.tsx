@@ -5,13 +5,13 @@ import { getMoves } from "../helpers/engine_calls"
 import { useWebSocket } from "../hooks/useWebSocket"
 import { ChessContext } from "../hooks/useChessContext"
 import type { ServerResponse } from "../types/types"
-import { Piece } from "../helpers/constants"
+import { initialBoard, Piece } from "../helpers/constants"
 
 const ChessProvider = ({ children }: { children: ReactNode }) => {
   const roleRef = useRef(null)
   const gameIdRef = useRef("")
   const [isUserTurn, setIsUserTurn] = useState<boolean>(true)
-  const [board, setBoard] = useState<number[]>([])
+  const [board, setBoard] = useState<number[]>(initialBoard)
   const [highlight, setHighlight] = useState<number[]>([])
   const [threats, setThreats] = useState<bigint>(0n)
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
