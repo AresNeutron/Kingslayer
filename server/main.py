@@ -101,26 +101,22 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             print("Message from UI:")
             print(event)
 
-            message = None
-            num = None
+            response = None
 
             async with game_states_lock:
                 game_manager: GameManager = game_states.get(game_id)
                 
                 if event == "user_moves":
-                    message, num = await game_manager.user_moves(data) # here "data" is the move code
+                    response = await game_manager.user_moves(data) # here "data" is the move code
 
                 elif event == "engine_moves":
-                    message, num = await game_manager.engine_moves() # data is not needed here
+                    response = await game_manager.engine_moves() # data is not needed here
 
                 elif event == "promotion":
-                    message, num = await game_manager.resolve_promotion(data) # here "data" is the promotion
+                    response = await game_manager.resolve_promotion(data) # here "data" is the promotion
 
-            if message is not None and num is not None:
-                await websocket.send_json({
-                    "event": message,
-                    "data": num
-                })
+            if response:
+                await websocket.send_json(response)
 
     except WebSocketDisconnect:
         # In case of disconection, erase the game. Data is lost
