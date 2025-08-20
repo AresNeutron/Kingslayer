@@ -104,7 +104,7 @@ Piece BoardState::promote(int promotion_sq, Type promotion) { // promotes to que
     Type type = getType(pc);
     Color color = colorOf(pc);
 
-    if (type != PAWN || !((PROMOTION_ROWS[color] >> promotion_sq) & 1ULL)) return;
+    if (type != PAWN || !((PROMOTION_ROWS[color] >> promotion_sq) & 1ULL)) return NO_PIECE;
 
     deletePiece(promotion_sq);
 

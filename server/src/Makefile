@@ -12,6 +12,7 @@ SRCS = \
     game/game_flow.cpp \
     game/special_methods.cpp \
     constants/rays.cpp \
+    constants/helpers.cpp \
     search/search.cpp \
     precomputed_moves/non_sliding_moves/king_knight.cpp \
     precomputed_moves/non_sliding_moves/pawn.cpp \

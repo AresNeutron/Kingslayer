@@ -92,7 +92,7 @@ void uci_loop() {
                 int promotion;
                 iss >> promotion;
                 
-                game.resolve_promotion(promotion);
+                game.user_promotion(promotion);
                 break;
             }
 
