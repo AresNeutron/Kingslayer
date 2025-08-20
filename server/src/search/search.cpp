@@ -170,7 +170,8 @@ void Search::engine_moves(Game& game) {
     
     // later we must implement an heuristic for promotion
     if (game.get_promotion_sq() != NO_SQ) {
-        game.get_board_state().promote(game.get_promotion_sq()); // promote to queen by default
+        Piece promotion_pc = game.get_board_state().promote(game.get_promotion_sq()); // promote to queen by default
+        std::cout << "promotion_pc " << static_cast<int>(promotion_pc) << std::endl;
         game.set_promotion_sq(NO_SQ);
     }
 
@@ -181,7 +182,7 @@ void Search::engine_moves(Game& game) {
     uint64_t threats = game.detect_check();
     game.detect_game_over();
 
-    std::cout << threats << std::endl;
-    std::cout << eventMessages[game.get_game_event()] << std::endl;
-    std::cout << "readyok\n";
+    std::cout << "event_data " << threats << std::endl;
+    std::cout << "event " << eventMessages[game.get_game_event()] << std::endl;
+    std::cout << "nextturn\n";
 }
