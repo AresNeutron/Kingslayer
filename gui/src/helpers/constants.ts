@@ -24,29 +24,29 @@ export const Piece = {
 };
 
 export const initialBoard = [
-  // Rank 8 (Black pieces, indexes 56-63)
-  Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_BISHOP, Piece.BLACK_QUEEN,
-  Piece.BLACK_KING, Piece.BLACK_BISHOP, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK,
+  // Rank 1 (White pieces, indexes 0-7)
+  Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_BISHOP, Piece.WHITE_QUEEN,
+  Piece.WHITE_KING, Piece.WHITE_BISHOP, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK,
+  
+  // Rank 2 (White pawns, indexes 8-15)
+  Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN,
+  Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN,
+
+  // Ranks 3-6 (Empty squares, indexes 16-47)
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
+  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
   
   // Rank 7 (Black pawns, indexes 48-55)
   Piece.BLACK_PAWN, Piece.BLACK_PAWN, Piece.BLACK_PAWN, Piece.BLACK_PAWN,
   Piece.BLACK_PAWN, Piece.BLACK_PAWN, Piece.BLACK_PAWN, Piece.BLACK_PAWN,
   
-  // Ranks 6-3 (Empty squares, indexes 16-47)
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE, Piece.NO_PIECE,
-  
-  // Rank 2 (White pawns, indexes 8-15)
-  Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN,
-  Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN, Piece.WHITE_PAWN,
-  
-  // Rank 1 (White pieces, indexes 0-7)
-  Piece.WHITE_ROOK, Piece.WHITE_KNIGHT, Piece.WHITE_BISHOP, Piece.WHITE_QUEEN,
-  Piece.WHITE_KING, Piece.WHITE_BISHOP, Piece.WHITE_KNIGHT, Piece.WHITE_ROOK
+  // Rank 8 (Black pieces, indexes 56-63)
+  Piece.BLACK_ROOK, Piece.BLACK_KNIGHT, Piece.BLACK_BISHOP, Piece.BLACK_QUEEN,
+  Piece.BLACK_KING, Piece.BLACK_BISHOP, Piece.BLACK_KNIGHT, Piece.BLACK_ROOK,
 ]
