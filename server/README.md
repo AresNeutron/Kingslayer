@@ -62,6 +62,7 @@ awaiting
 
 **User Promotion Resolution:**
 ```
+move_data -1 -1 -1 63
 promotion_pc 4
 event_data 2048
 event check
