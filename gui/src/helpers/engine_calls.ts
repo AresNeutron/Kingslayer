@@ -18,30 +18,6 @@ export const createGame = async (gameId: string, userIsWhite: boolean): Promise<
   }
 }
 
-// "/board/{game_id}"
-export const getBoard = async (game_id: string): Promise<number[]> => {
-  try {
-    const res = await fetch(url + "board/" + game_id)
-    if (!res.ok) {
-      console.error("Fetch Boards Function failed:", res.statusText)
-      return []
-    }
-    const data = await res.json() // Get the object with the 'board' key
-    const responseBoard: number[] = data["board"]
-
-    // Ensure responseBoard exists and is an array before mapping
-    if (!responseBoard || !Array.isArray(responseBoard)) {
-      console.error("Invalid board data received:", data)
-      return []
-    }
-
-    return responseBoard
-  } catch (err) {
-    console.error("Error fetching board:", err)
-    return []
-  }
-}
-
 // /game/{game_id}/moves/{square}
 export const getMoves = async (game_id: string, square: number): Promise<number[]> => {
   try {
