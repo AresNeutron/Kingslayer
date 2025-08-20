@@ -22,7 +22,6 @@ function GameControls({
     roleRef,
     isUserTurn,
     setIsUserTurn,
-    updateBitboardState,
     gameMessage,
     setGameMessage,
     initializeWebSocket,
@@ -38,7 +37,6 @@ function GameControls({
       gameIdRef.current = gameId
       roleRef.current = isWhite
       await initializeWebSocket(gameId)
-      updateBitboardState(gameId)
       setIsUserTurn(isWhite)
       setIsPlaying(true)
       setGameMessage("")
