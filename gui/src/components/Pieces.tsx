@@ -305,35 +305,46 @@ function Pieces() {
           )
         })}
         
-        {/* Render promoting pieces (transformation) */}
+        {/* Render promoting pieces (transformation) - now handles sequential phases */}
         {Object.entries(promotingPieces).map(([promId, promPiece]) => {
           const { col, row } = getSquarePosition(promPiece.square)
           const isWhite = promPiece.toPiece > Piece.BLACK_ROOK
           
           // Calculate promotion progress (0 to 1)
           const elapsed = Date.now() - promPiece.startTime
-          const progress = Math.min(elapsed / 200, 1) // 200ms promotion duration
+          const progress = Math.min(elapsed / 200, 1) // 200ms per phase
           
-          // Animation phases: scale down -> scale up with new piece
-          const midPoint = 0.3 // When to switch pieces
           let currentPiece = promPiece.fromPiece
           let scale = 1
-          const opacity = 1
+          let opacity = 1
           let glow = 0
           
-          if (progress <= midPoint) {
-            // Phase 1: Scale down old piece
-            scale = 1 - (progress / midPoint) * 0.3 // Scale down to 0.7
+          if (promPiece.phase === 'fade_out') {
+            // Phase 1: Fade out old piece (pawn disappearing like a capture)
+            scale = 1 // Keep normal size
             currentPiece = promPiece.fromPiece
-          } else {
-            // Phase 2: Scale up new piece with glow effect
-            const phase2Progress = (progress - midPoint) / (1 - midPoint)
-            scale = 0.7 + phase2Progress * 0.6 // Scale from 0.7 to 1.3, then back to 1
-            if (phase2Progress > 0.7) {
-              scale = 1.3 - (phase2Progress - 0.7) * 1 // Scale back down
-            }
+            opacity = 1 - progress // Fade from 1 to 0
+          } else if (promPiece.phase === 'fade_in') {
+            // Phase 2: Fade in new piece with glow effect (new piece appearing)
+            scale = 1 // Keep normal size
             currentPiece = promPiece.toPiece
-            glow = phase2Progress * 0.8 // Increase glow effect
+            opacity = progress // Fade from 0 to 1
+            glow = progress * 0.8 // Increase glow effect
+          } else {
+            // Fallback to old behavior for backward compatibility
+            const midPoint = 0.3
+            if (progress <= midPoint) {
+              scale = 1 - (progress / midPoint) * 0.3
+              currentPiece = promPiece.fromPiece
+            } else {
+              const phase2Progress = (progress - midPoint) / (1 - midPoint)
+              scale = 0.7 + phase2Progress * 0.6
+              if (phase2Progress > 0.7) {
+                scale = 1.3 - (phase2Progress - 0.7) * 1
+              }
+              currentPiece = promPiece.toPiece
+              glow = phase2Progress * 0.8
+            }
           }
           
           return (

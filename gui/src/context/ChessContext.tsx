@@ -38,6 +38,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
       toPiece: number;
       square: number;
       startTime: number;
+      phase?: 'fade_out' | 'fade_in';
     }
   }>({})
   const [highlight, setHighlight] = useState<number[]>([])
@@ -87,61 +88,125 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     return newBoard
   }, [])
 
-  // Start promotion animation (separate from translation)
+  // Start promotion animation (separate from translation) - now sequential
   const startPromotionAnimation = useCallback((square: number, fromPiece: number, toPiece: number) => {
     setIsAnimating(true)
     const currentTime = Date.now()
     
+    // Phase 1: Fade out the pawn (200ms)
     setPromotingPieces({
-      [`promotion_${currentTime}`]: {
+      [`promotion_phase1_${currentTime}`]: {
         fromPiece,
-        toPiece,
+        toPiece: fromPiece, // Keep showing the pawn during fade out
         square,
-        startTime: currentTime
+        startTime: currentTime,
+        phase: 'fade_out' as const
       }
     })
 
-    // Complete promotion animation after 200ms
+    // Phase 2: Scale up/appear the new piece (after 200ms delay)
     setTimeout(() => {
-      boardRef.current[square] = toPiece
-      setPromotingPieces({})
-      setIsAnimating(false)
+      setPromotingPieces({
+        [`promotion_phase2_${currentTime + 200}`]: {
+          fromPiece,
+          toPiece,
+          square,
+          startTime: Date.now(),
+          phase: 'fade_in' as const
+        }
+      })
+
+      // Complete promotion animation after another 200ms
+      setTimeout(() => {
+        boardRef.current[square] = toPiece
+        setPromotingPieces({})
+        setIsAnimating(false)
+      }, 200)
     }, 200)
   }, [])
 
-  // Start translation and fading animations
+  // Start translation and fading animations - now sequential for captures
   const startTranslationAnimation = useCallback((response: ServerResponse) => {
     if (!response.move_data) return
 
     setIsAnimating(true)
     const [from_sq_1, to_sq_1, from_sq_2, to_sq_2] = response.move_data
     const currentTime = Date.now()
-    const newAnimatingPieces: typeof animatingPieces = {}
-    const newFadingPieces: typeof fadingPieces = {}
-
-    // Primary piece animation (from_sq_2 -> to_sq_2)
-    if (from_sq_2 !== -1 && to_sq_2 !== -1) {
-      const piece = boardRef.current[from_sq_2]
-      newAnimatingPieces[`primary_${currentTime}`] = {
-        piece,
-        fromSquare: from_sq_2,
-        toSquare: to_sq_2,
-        startTime: currentTime
-      }
-    }
-
-    // Handle capture or castling
-    if (from_sq_1 !== -1) {
-      if (to_sq_1 === -1) {
-        // Capture: fade piece at from_sq_1
-        const capturedPiece = boardRef.current[from_sq_1]
-        newFadingPieces[`captured_${currentTime}`] = {
+    
+    // Check if this is a capture
+    const isCapture = from_sq_1 !== -1 && to_sq_1 === -1
+    
+    if (isCapture) {
+      // CAPTURE SEQUENCE: First fade, then translate
+      
+      // Phase 1: Start fading animation for captured piece
+      const capturedPiece = boardRef.current[from_sq_1]
+      setFadingPieces({
+        [`captured_${currentTime}`]: {
           piece: capturedPiece,
           square: from_sq_1,
           startTime: currentTime
         }
-      } else {
-        // Castling: animate rook from from_sq_1 to to_sq_1
+      })
+      
+      // Phase 2: After fade completes + small delay, start translation
+      setTimeout(() => {
+        setFadingPieces({}) // Clear fading pieces
+        
+        // Start translation animation
+        if (from_sq_2 !== -1 && to_sq_2 !== -1) {
+          const piece = boardRef.current[from_sq_2]
+          setAnimatingPieces({
+            [`primary_${Date.now()}`]: {
+              piece,
+              fromSquare: from_sq_2,
+              toSquare: to_sq_2,
+              startTime: Date.now()
+            }
+          })
+        }
+        
+        // Complete translation after 300ms
+        setTimeout(() => {
+          const newBoard = calculateBoardUpdates(response)
+          
+          // Check for engine promotion
+          const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
+          
+          if (hasPromotion) {
+            const boardWithoutPromotion = [...newBoard]
+            boardWithoutPromotion[to_sq_2] = boardRef.current[from_sq_2]
+            boardRef.current = boardWithoutPromotion
+            
+            setTimeout(() => {
+              startPromotionAnimation(to_sq_2, boardRef.current[from_sq_2], response.promotion_pc!)
+            }, 200) // 200ms delay for engine promotion
+          } else {
+            boardRef.current = newBoard
+            setIsAnimating(false)
+          }
+          
+          setAnimatingPieces({})
+        }, 300)
+      }, 300) // 300ms fade, no delay
+      
+    } else {
+      // NON-CAPTURE SEQUENCE: Handle normally (translation + castling if needed)
+      const newAnimatingPieces: typeof animatingPieces = {}
+
+      // Primary piece animation (from_sq_2 -> to_sq_2)
+      if (from_sq_2 !== -1 && to_sq_2 !== -1) {
+        const piece = boardRef.current[from_sq_2]
+        newAnimatingPieces[`primary_${currentTime}`] = {
+          piece,
+          fromSquare: from_sq_2,
+          toSquare: to_sq_2,
+          startTime: currentTime
+        }
+      }
+
+      // Handle castling
+      if (from_sq_1 !== -1 && to_sq_1 !== -1) {
         const rook = boardRef.current[from_sq_1]
         newAnimatingPieces[`secondary_${currentTime}`] = {
           piece: rook,
@@ -150,37 +215,32 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
           startTime: currentTime
         }
       }
-    }
 
-    setAnimatingPieces(newAnimatingPieces)
-    setFadingPieces(newFadingPieces)
+      setAnimatingPieces(newAnimatingPieces)
 
-    // Check for engine promotion (has move_data AND promotion_pc)
-    const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
-    
-    // Complete translation animation after 300ms
-    setTimeout(() => {
-      const newBoard = calculateBoardUpdates(response)
-      
-      if (hasPromotion) {
-        // For engine promotion: don't apply promotion_pc yet, start promotion animation
-        const boardWithoutPromotion = [...newBoard]
-        boardWithoutPromotion[to_sq_2] = boardRef.current[from_sq_2] // Keep the pawn
-        boardRef.current = boardWithoutPromotion
+      // Complete translation animation after 300ms
+      setTimeout(() => {
+        const newBoard = calculateBoardUpdates(response)
         
-        // Start promotion animation after translation completes
-        setTimeout(() => {
-          startPromotionAnimation(to_sq_2, boardRef.current[from_sq_2], response.promotion_pc!)
-        }, 50) // Small delay between phases
-      } else {
-        // Normal move: apply all updates
-        boardRef.current = newBoard
-        setIsAnimating(false)
-      }
-      
-      setAnimatingPieces({})
-      setFadingPieces({})
-    }, 300)
+        // Check for engine promotion
+        const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
+        
+        if (hasPromotion) {
+          const boardWithoutPromotion = [...newBoard]
+          boardWithoutPromotion[to_sq_2] = boardRef.current[from_sq_2]
+          boardRef.current = boardWithoutPromotion
+          
+          setTimeout(() => {
+            startPromotionAnimation(to_sq_2, boardRef.current[from_sq_2], response.promotion_pc!)
+          }, 200) // 200ms delay for engine promotion
+        } else {
+          boardRef.current = newBoard
+          setIsAnimating(false)
+        }
+        
+        setAnimatingPieces({})
+      }, 300)
+    }
   }, [calculateBoardUpdates, startPromotionAnimation])
 
   const handleMessage = useCallback((messageEvent: MessageEvent) => {

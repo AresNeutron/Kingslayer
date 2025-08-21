@@ -36,6 +36,7 @@ export interface ChessContextValue {
       toPiece: number;
       square: number;
       startTime: number;
+      phase?: 'fade_out' | 'fade_in';
     }
   };
   socketRef: RefObject<WebSocket | null>;
