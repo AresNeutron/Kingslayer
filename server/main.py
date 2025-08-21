@@ -99,7 +99,8 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
             data = ui_message.get("data") 
 
             print("Message from UI:")
-            print(event)
+            print("Event:", event)
+            print("Data:", data)
 
             response = None
 
