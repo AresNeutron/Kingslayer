@@ -9,7 +9,7 @@ function Dashboard({
 }: {
   setIsPlaying: Dispatch<SetStateAction<boolean>>
 }) {
-  const { isPromoting, board, roleRef } = useChessContext()
+  const { isPromoting, boardRef, roleRef } = useChessContext()
 
   return (
     <div className="w-full max-w-7xl mx-auto px-2 sm:px-4">
@@ -29,7 +29,7 @@ function Dashboard({
               {isPromoting && <Promote />}
 
               {/* Chess board - only render when board data is ready */}
-              {board && board.length === 64 && (
+              {boardRef.current && boardRef.current.length === 64 && (
                 <div className="relative">
                   <div className="absolute -top-4 sm:-top-8 -left-4 sm:-left-8 text-lg sm:text-2xl text-[var(--accent)] opacity-40 animate-pulse">
                     🗡️

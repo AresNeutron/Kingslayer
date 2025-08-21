@@ -1,7 +1,7 @@
 import type { Dispatch, RefObject, SetStateAction } from "react";
 
 export interface ChessContextValue {
-  board: number[];
+  boardRef: RefObject<number[]>;
   gameIdRef: RefObject<string>;
   roleRef: RefObject<boolean | null>;
   isUserTurn: boolean;

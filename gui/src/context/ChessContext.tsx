@@ -379,7 +379,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ChessContext.Provider
       value={{
-        board: boardRef.current,
+        boardRef,
         isAnimating,
         animatingPieces,
         fadingPieces,

@@ -1,23 +1,33 @@
-"use client"
+"use client";
 
-import { type Dispatch, type SetStateAction, useState } from "react"
-import { Sword, Crown, Shield, Sparkles, Play, RotateCcw, Zap } from "lucide-react"
-import { createGame } from "../helpers/engine_calls"
-import { useChessContext } from "../hooks/useChessContext"
+import { type Dispatch, type SetStateAction, useState } from "react";
+import {
+  Sword,
+  Crown,
+  Shield,
+  Sparkles,
+  Play,
+  RotateCcw,
+  Zap,
+} from "lucide-react";
+import { createGame } from "../helpers/engine_calls";
+import { useChessContext } from "../hooks/useChessContext";
+import { initialBoard } from "../helpers/constants";
 
 function GameControls({
   setIsPlaying,
   isInDashboard = false,
 }: {
-  setIsPlaying: Dispatch<SetStateAction<boolean>>
-  isInDashboard?: boolean
+  setIsPlaying: Dispatch<SetStateAction<boolean>>;
+  isInDashboard?: boolean;
 }) {
-  const [isSelectingRole, setIsSelectingRole] = useState<boolean>(false)
-  const [isUserWhite, setIsUserWhite] = useState<boolean | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [showButtons, setShowButtons] = useState(true)
+  const [isSelectingRole, setIsSelectingRole] = useState<boolean>(false);
+  const [isUserWhite, setIsUserWhite] = useState<boolean | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [showButtons, setShowButtons] = useState(true);
 
   const {
+    boardRef,
     gameIdRef,
     roleRef,
     isUserTurn,
@@ -25,43 +35,45 @@ function GameControls({
     gameMessage,
     setGameMessage,
     initializeWebSocket,
-  } = useChessContext()
+  } = useChessContext();
 
   const startGame = async (isWhite: boolean) => {
-    if (isCreating) return
-    setIsCreating(true)
-    setGameMessage("Forging the battlefield...")
+    if (isCreating) return;
+    setIsCreating(true);
+    setGameMessage("Forging the battlefield...");
     try {
-      const gameId = crypto.randomUUID()
-      await createGame(gameId, isWhite)
-      gameIdRef.current = gameId
-      roleRef.current = isWhite
-      await initializeWebSocket(gameId)
-      setIsUserTurn(isWhite)
-      setIsPlaying(true)
-      setGameMessage("")
+      const gameId = crypto.randomUUID();
+      await createGame(gameId, isWhite);
+      gameIdRef.current = gameId;
+      roleRef.current = isWhite;
+      await initializeWebSocket(gameId);
+      setIsUserTurn(isWhite);
+      setIsPlaying(true);
+      setGameMessage("");
+      boardRef.current = initialBoard;
     } catch (error) {
-      console.error("Error creating game:", error)
-      setGameMessage("The forge has failed us...")
-      gameIdRef.current = ""
-      roleRef.current = null
+      console.error("Error creating game:", error);
+      setGameMessage("The forge has failed us...");
+      gameIdRef.current = "";
+      roleRef.current = null;
     } finally {
-      setIsCreating(false)
+      setIsCreating(false);
     }
-  }
+  };
 
   const resetGame = () => {
-    setShowButtons(false)
+    setShowButtons(false);
     setTimeout(() => {
-      setIsPlaying(false)
-      setIsSelectingRole(false)
-      setIsUserWhite(null)
-      gameIdRef.current = ""
-      roleRef.current = null
-      setGameMessage("")
-      setShowButtons(true)
-    }, 300)
-  }
+      setIsPlaying(false);
+      setIsSelectingRole(false);
+      setIsUserWhite(null);
+      gameIdRef.current = "";
+      roleRef.current = null;
+      setGameMessage("");
+      setShowButtons(true);
+      boardRef.current = initialBoard;
+    }, 300);
+  };
 
   // Dashboard mode with consistent dark theme
   if (isInDashboard) {
@@ -124,7 +136,8 @@ function GameControls({
                 <div className="text-center text-[var(--card-foreground)] mb-3 sm:mb-4 italic animate-in slide-in-from-bottom-3 duration-700 delay-500">
                   <div className="bg-[var(--muted)]/60 backdrop-blur-sm rounded-lg p-2 sm:p-3 border border-[var(--border)]">
                     <span className="text-sm sm:text-base mobile-text">
-                      The battle has concluded. Prepare thy mind for another glorious encounter!
+                      The battle has concluded. Prepare thy mind for another
+                      glorious encounter!
                     </span>
                   </div>
                 </div>
@@ -157,29 +170,30 @@ function GameControls({
                     </div>
                   )}
 
-                  {!gameMessage.includes("Started") && roleRef.current !== null && (
-                    <div className="text-center">
-                      <div
-                        className={`inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-bold text-base sm:text-lg mobile-text transition-all duration-500 border-2 shadow-[var(--shadow-soft)] ${
-                          isUserTurn
-                            ? "bg-green-900/80 text-green-300 border-green-600 animate-pulse shadow-green-900/50"
-                            : "bg-[var(--muted)]/80 text-[var(--muted-foreground)] border-[var(--border)]"
-                        }`}
-                      >
-                        {isUserTurn ? (
-                          <>
-                            <Zap className="w-4 sm:w-5 h-4 sm:h-5 animate-bounce" />
-                            YOUR MOVE
-                          </>
-                        ) : (
-                          <>
-                            <div className="w-4 sm:w-5 h-4 sm:h-5 border-2 border-[var(--accent)] rounded-full animate-spin border-t-transparent" />
-                            ENEMY PLOTTING...
-                          </>
-                        )}
+                  {!gameMessage.includes("Started") &&
+                    roleRef.current !== null && (
+                      <div className="text-center">
+                        <div
+                          className={`inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg font-bold text-base sm:text-lg mobile-text transition-all duration-500 border-2 shadow-[var(--shadow-soft)] ${
+                            isUserTurn
+                              ? "bg-green-900/80 text-green-300 border-green-600 animate-pulse shadow-green-900/50"
+                              : "bg-[var(--muted)]/80 text-[var(--muted-foreground)] border-[var(--border)]"
+                          }`}
+                        >
+                          {isUserTurn ? (
+                            <>
+                              <Zap className="w-4 sm:w-5 h-4 sm:h-5 animate-bounce" />
+                              YOUR MOVE
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-4 sm:w-5 h-4 sm:h-5 border-2 border-[var(--accent)] rounded-full animate-spin border-t-transparent" />
+                              ENEMY PLOTTING...
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
 
@@ -213,11 +227,31 @@ function GameControls({
           </h4>
           <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm mobile-text text-[var(--card-foreground)]">
             {[
-              { icon: "🎯", text: "Click pieces to select and move", delay: "delay-100" },
-              { icon: "🔵", text: "Blue highlights show valid moves", delay: "delay-200" },
-              { icon: "🔴", text: "Red highlights show captures", delay: "delay-300" },
-              { icon: "🟣", text: "Purple shows special moves", delay: "delay-400" },
-              { icon: "⟲", text: "Reverse Move button undoes last action", delay: "delay-500" },
+              {
+                icon: "🎯",
+                text: "Click pieces to select and move",
+                delay: "delay-100",
+              },
+              {
+                icon: "🔵",
+                text: "Blue highlights show valid moves",
+                delay: "delay-200",
+              },
+              {
+                icon: "🔴",
+                text: "Red highlights show captures",
+                delay: "delay-300",
+              },
+              {
+                icon: "🟣",
+                text: "Purple shows special moves",
+                delay: "delay-400",
+              },
+              {
+                icon: "⟲",
+                text: "Reverse Move button undoes last action",
+                delay: "delay-500",
+              },
             ].map((item, index) => (
               <div
                 key={index}
@@ -230,12 +264,16 @@ function GameControls({
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div
-      className={`mb-4 sm:mb-6 w-full max-w-2xl transition-all duration-500 px-2 ${showButtons ? "animate-in slide-in-from-bottom-5" : "animate-out slide-out-to-bottom-5"}`}
+      className={`mb-4 sm:mb-6 w-full max-w-2xl transition-all duration-500 px-2 ${
+        showButtons
+          ? "animate-in slide-in-from-bottom-5"
+          : "animate-out slide-out-to-bottom-5"
+      }`}
     >
       <div className="bg-gradient-to-br from-[var(--card)] via-[var(--muted)] to-[var(--secondary)] backdrop-blur-md p-4 sm:p-8 rounded-2xl border-2 border-[var(--border)] shadow-[var(--shadow-medium)] relative overflow-hidden">
         <div className="absolute top-2 sm:top-3 left-2 sm:left-3 text-[var(--accent)]/40 animate-pulse">
@@ -278,9 +316,9 @@ function GameControls({
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 animate-in slide-in-from-bottom-5 duration-1000 delay-700 w-full">
               <button
                 onClick={() => {
-                  setIsUserWhite(true)
-                  startGame(true)
-                  setIsSelectingRole(false)
+                  setIsUserWhite(true);
+                  startGame(true);
+                  setIsSelectingRole(false);
                 }}
                 disabled={isCreating}
                 className="group relative px-4 sm:px-8 py-4 sm:py-6 bg-gradient-to-br from-[var(--foreground)] via-[var(--card-foreground)] to-[var(--foreground)] text-[var(--background)] font-bold text-lg sm:text-xl mobile-subtitle rounded-2xl border-3 border-[var(--foreground)] shadow-[var(--shadow-medium)] transform transition-all duration-500 hover:scale-110 hover:-rotate-2 hover:shadow-[var(--shadow-glow)] focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden animate-in zoom-in-75 duration-800 delay-900"
@@ -304,9 +342,9 @@ function GameControls({
 
               <button
                 onClick={() => {
-                  setIsUserWhite(false)
-                  startGame(false)
-                  setIsSelectingRole(false)
+                  setIsUserWhite(false);
+                  startGame(false);
+                  setIsSelectingRole(false);
                 }}
                 disabled={isCreating}
                 className="group relative px-4 sm:px-8 py-4 sm:py-6 bg-gradient-to-br from-[var(--background)] via-[var(--card)] to-[var(--muted)] text-[var(--foreground)] font-bold text-lg sm:text-xl mobile-subtitle rounded-2xl border-3 border-[var(--accent)] shadow-[var(--shadow-medium)] transform transition-all duration-500 hover:scale-110 hover:rotate-2 hover:shadow-[var(--shadow-glow)] focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden animate-in zoom-in-75 duration-800 delay-1100"
@@ -345,7 +383,7 @@ function GameControls({
             <button
               className="group relative px-6 sm:px-12 py-4 sm:py-6 bg-gradient-to-br from-[var(--accent)] via-[var(--medieval-gold)] to-[var(--medieval-gold-light)] text-[var(--background)] font-bold text-xl sm:text-2xl mobile-subtitle rounded-2xl border-3 border-[var(--accent)] shadow-[var(--shadow-medium)] transform transition-all duration-500 hover:scale-110 hover:rotate-1 hover:shadow-[var(--shadow-glow)] focus:outline-none focus:ring-4 focus:ring-[var(--accent)] focus:ring-opacity-50 tracking-wide overflow-hidden"
               onClick={() => {
-                setIsSelectingRole(true)
+                setIsSelectingRole(true);
               }}
             >
               {/* Animated background shimmer */}
@@ -364,7 +402,7 @@ function GameControls({
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default GameControls
+export default GameControls;
