@@ -25,8 +25,7 @@ void Game::user_moves(uint16_t move_code) {
 
 
 void Game::user_promotion(int promotion) {
-    Piece promotion_pc = board_state.promote(promotion_sq, static_cast<Type>(promotion));
-    promotion_sq = NO_SQ;
+    Piece promotion_pc = board_state.promote(static_cast<int>(promotion_sq), static_cast<Type>(promotion));
     
     changeTurn();
 
@@ -35,11 +34,13 @@ void Game::user_promotion(int promotion) {
     detect_game_over();
 
     // stream adapted to match the move_data format
-    std::cout << "move_data " << -1 << " " << -1 << " " << -1 << " " << promotion_sq << std::endl;
+    std::cout << "move_data " << -1 << " " << -1 << " " << -1 << " " << static_cast<int>(promotion_sq) << std::endl;
     std::cout << "promotion_pc " << static_cast<int>(promotion_pc) << std::endl;
     std::cout << "event_data " << threats << std::endl;
     std::cout << "event " << eventMessages[game_event] << std::endl;
     std::cout << "nextturn\n";
+
+    promotion_sq = NO_SQ;
 }
 
 
