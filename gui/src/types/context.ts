@@ -30,6 +30,14 @@ export interface ChessContextValue {
       startTime: number;
     }
   };
+  promotingPieces: {
+    [key: string]: {
+      fromPiece: number;
+      toPiece: number;
+      square: number;
+      startTime: number;
+    }
+  };
   socketRef: RefObject<WebSocket | null>;
   gameMessage: string;
   setGameMessage: Dispatch<SetStateAction<string>>;

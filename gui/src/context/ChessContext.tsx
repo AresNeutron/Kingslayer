@@ -30,6 +30,16 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
       startTime: number;
     }
   }>({})
+  
+  // Promotion animation state
+  const [promotingPieces, setPromotingPieces] = useState<{
+    [key: string]: {
+      fromPiece: number;
+      toPiece: number;
+      square: number;
+      startTime: number;
+    }
+  }>({})
   const [highlight, setHighlight] = useState<number[]>([])
   const [threats, setThreats] = useState<bigint>(0n)
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
@@ -75,6 +85,28 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     }
     
     return newBoard
+  }, [])
+
+  // Start promotion animation (separate from translation)
+  const startPromotionAnimation = useCallback((square: number, fromPiece: number, toPiece: number) => {
+    setIsAnimating(true)
+    const currentTime = Date.now()
+    
+    setPromotingPieces({
+      [`promotion_${currentTime}`]: {
+        fromPiece,
+        toPiece,
+        square,
+        startTime: currentTime
+      }
+    })
+
+    // Complete promotion animation after 200ms
+    setTimeout(() => {
+      boardRef.current[square] = toPiece
+      setPromotingPieces({})
+      setIsAnimating(false)
+    }, 200)
   }, [])
 
   // Start translation and fading animations
@@ -123,14 +155,33 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     setAnimatingPieces(newAnimatingPieces)
     setFadingPieces(newFadingPieces)
 
-    // Complete animation after 300ms
+    // Check for engine promotion (has move_data AND promotion_pc)
+    const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
+    
+    // Complete translation animation after 300ms
     setTimeout(() => {
-      boardRef.current = calculateBoardUpdates(response)
+      const newBoard = calculateBoardUpdates(response)
+      
+      if (hasPromotion) {
+        // For engine promotion: don't apply promotion_pc yet, start promotion animation
+        const boardWithoutPromotion = [...newBoard]
+        boardWithoutPromotion[to_sq_2] = boardRef.current[from_sq_2] // Keep the pawn
+        boardRef.current = boardWithoutPromotion
+        
+        // Start promotion animation after translation completes
+        setTimeout(() => {
+          startPromotionAnimation(to_sq_2, boardRef.current[from_sq_2], response.promotion_pc!)
+        }, 50) // Small delay between phases
+      } else {
+        // Normal move: apply all updates
+        boardRef.current = newBoard
+        setIsAnimating(false)
+      }
+      
       setAnimatingPieces({})
       setFadingPieces({})
-      setIsAnimating(false)
     }, 300)
-  }, [calculateBoardUpdates])
+  }, [calculateBoardUpdates, startPromotionAnimation])
 
   const handleMessage = useCallback((messageEvent: MessageEvent) => {
     try {
@@ -272,6 +323,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         isAnimating,
         animatingPieces,
         fadingPieces,
+        promotingPieces,
         gameIdRef,
         roleRef,
         isUserTurn,

@@ -5,14 +5,14 @@ import { Piece } from "../helpers/constants"
 import { useChessContext } from "../hooks/useChessContext"
 
 function Pieces() {
-  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState, isAnimating, animatingPieces, fadingPieces } =
+  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState, isAnimating, animatingPieces, fadingPieces, promotingPieces } =
     useChessContext()
 
   // Force re-renders during animations
   const [, setAnimationFrame] = useState(0)
 
   useEffect(() => {
-    if (isAnimating && (Object.keys(animatingPieces).length > 0 || Object.keys(fadingPieces).length > 0)) {
+    if (isAnimating && (Object.keys(animatingPieces).length > 0 || Object.keys(fadingPieces).length > 0 || Object.keys(promotingPieces).length > 0)) {
       const animateFrame = () => {
         setAnimationFrame(prev => prev + 1)
         requestAnimationFrame(animateFrame)
@@ -22,14 +22,14 @@ function Pieces() {
       // Stop animation loop when pieces finish animating
       const stopTimer = setTimeout(() => {
         cancelAnimationFrame(frameId)
-      }, 320) // Slightly longer than animation duration
+      }, 550) // Longer to account for promotion phase (300ms + 200ms + buffer)
 
       return () => {
         cancelAnimationFrame(frameId)
         clearTimeout(stopTimer)
       }
     }
-  }, [isAnimating, animatingPieces, fadingPieces])
+  }, [isAnimating, animatingPieces, fadingPieces, promotingPieces])
 
   // Helper function to calculate piece position
   function getSquarePosition(squareIndex: number) {
@@ -83,8 +83,13 @@ function Pieces() {
               fadePiece => fadePiece.square === i
             )
             
-            // Don't render pieces that are animating from this position or fading
-            if (isAnimatingFromHere || isFadingHere) return null
+            // Check if this piece is currently promoting at this square
+            const isPromotingHere = Object.values(promotingPieces).some(
+              promPiece => promPiece.square === i
+            )
+            
+            // Don't render pieces that are animating from this position, fading, or promoting
+            if (isAnimatingFromHere || isFadingHere || isPromotingHere) return null
             
             const { col, row } = getSquarePosition(i)
             const isWhite = piece > Piece.BLACK_ROOK
@@ -295,6 +300,145 @@ function Pieces() {
                     `,
                   }}
                 />
+              </div>
+            </div>
+          )
+        })}
+        
+        {/* Render promoting pieces (transformation) */}
+        {Object.entries(promotingPieces).map(([promId, promPiece]) => {
+          const { col, row } = getSquarePosition(promPiece.square)
+          const isWhite = promPiece.toPiece > Piece.BLACK_ROOK
+          
+          // Calculate promotion progress (0 to 1)
+          const elapsed = Date.now() - promPiece.startTime
+          const progress = Math.min(elapsed / 200, 1) // 200ms promotion duration
+          
+          // Animation phases: scale down -> scale up with new piece
+          const midPoint = 0.3 // When to switch pieces
+          let currentPiece = promPiece.fromPiece
+          let scale = 1
+          const opacity = 1
+          let glow = 0
+          
+          if (progress <= midPoint) {
+            // Phase 1: Scale down old piece
+            scale = 1 - (progress / midPoint) * 0.3 // Scale down to 0.7
+            currentPiece = promPiece.fromPiece
+          } else {
+            // Phase 2: Scale up new piece with glow effect
+            const phase2Progress = (progress - midPoint) / (1 - midPoint)
+            scale = 0.7 + phase2Progress * 0.6 // Scale from 0.7 to 1.3, then back to 1
+            if (phase2Progress > 0.7) {
+              scale = 1.3 - (phase2Progress - 0.7) * 1 // Scale back down
+            }
+            currentPiece = promPiece.toPiece
+            glow = phase2Progress * 0.8 // Increase glow effect
+          }
+          
+          return (
+            <div
+              key={promId}
+              className="absolute transition-none flex items-center justify-center pointer-events-none z-35"
+              style={{
+                width: "var(--cell-size)",
+                height: "var(--cell-size)",
+                top: `calc(${row} * var(--cell-size))`,
+                left: `calc(${col} * var(--cell-size))`,
+                transform: `translateZ(0) scale(${scale})`,
+                opacity: opacity,
+              }}
+            >
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Medieval ascension glow effect */}
+                <div
+                  className="absolute inset-0 rounded-full animate-pulse"
+                  style={{
+                    background: `radial-gradient(circle, ${
+                      isWhite 
+                        ? `rgba(255, 215, 0, ${glow * 0.6})` 
+                        : `rgba(138, 43, 226, ${glow * 0.6})`
+                    } 0%, transparent 70%)`,
+                    boxShadow: glow > 0 ? `0 0 ${20 + glow * 30}px ${
+                      isWhite 
+                        ? `rgba(255, 215, 0, ${glow * 0.8})` 
+                        : `rgba(138, 43, 226, ${glow * 0.8})`
+                    }` : 'none',
+                  }}
+                />
+
+                {/* Background glow for white pieces */}
+                {isWhite && (
+                  <div
+                    className="absolute inset-2 rounded-full"
+                    style={{
+                      background: "radial-gradient(circle, #f4e4d0 0%, transparent 70%)",
+                      opacity: 0.2 + glow * 0.3,
+                    }}
+                  />
+                )}
+
+                <img
+                  src={`/images/${currentPiece}.png`}
+                  alt={`Promoting chess piece ${currentPiece}`}
+                  className={`object-contain relative z-10
+                    ${isWhite ? "brightness-110 contrast-110" : "brightness-95"}`}
+                  style={{
+                    width: "var(--piece-size)",
+                    height: "var(--piece-size)",
+                    filter: `
+                      ${isWhite ? "drop-shadow(0 0 2px rgba(244,228,208,0.8))" : ""}
+                      ${glow > 0 ? `drop-shadow(0 0 ${5 + glow * 15}px rgba(255,215,0,${glow}))` : ""}
+                      saturate(${1.1 + glow * 0.5})
+                      contrast(${1.05 + glow * 0.3})
+                      brightness(${1 + glow * 0.3})
+                    `,
+                  }}
+                />
+                
+                {/* Sparkle effects for promotion */}
+                {glow > 0.3 && (
+                  <>
+                    <div 
+                      className="absolute animate-pulse"
+                      style={{
+                        top: '10%',
+                        right: '15%',
+                        fontSize: `${12 + glow * 8}px`,
+                        opacity: glow,
+                        color: isWhite ? '#FFD700' : '#8A2BE2'
+                      }}
+                    >
+                      ✨
+                    </div>
+                    <div 
+                      className="absolute animate-pulse"
+                      style={{
+                        bottom: '15%',
+                        left: '10%',
+                        fontSize: `${10 + glow * 6}px`,
+                        opacity: glow * 0.8,
+                        color: isWhite ? '#FFD700' : '#8A2BE2',
+                        animationDelay: '0.2s'
+                      }}
+                    >
+                      ⭐
+                    </div>
+                    <div 
+                      className="absolute animate-pulse"
+                      style={{
+                        top: '20%',
+                        left: '20%',
+                        fontSize: `${8 + glow * 4}px`,
+                        opacity: glow * 0.6,
+                        color: isWhite ? '#FFD700' : '#8A2BE2',
+                        animationDelay: '0.4s'
+                      }}
+                    >
+                      💫
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )
