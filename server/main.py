@@ -117,6 +117,7 @@ async def websocket_endpoint(websocket: WebSocket, game_id: str):
                     response = await game_manager.resolve_promotion(data) # here "data" is the promotion
 
             if response:
+                print("ServerResponse: ", response)
                 await websocket.send_json(response)
 
     except WebSocketDisconnect:
