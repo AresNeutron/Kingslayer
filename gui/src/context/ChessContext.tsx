@@ -21,6 +21,15 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
       startTime: number;
     }
   }>({})
+  
+  // Fading pieces state for captures
+  const [fadingPieces, setFadingPieces] = useState<{
+    [key: string]: {
+      piece: number;
+      square: number;
+      startTime: number;
+    }
+  }>({})
   const [highlight, setHighlight] = useState<number[]>([])
   const [threats, setThreats] = useState<bigint>(0n)
   const [selectedSquare, setSelectedSquare] = useState<number | null>(null)
@@ -68,7 +77,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     return newBoard
   }, [])
 
-  // Start translation animation
+  // Start translation and fading animations
   const startTranslationAnimation = useCallback((response: ServerResponse) => {
     if (!response.move_data) return
 
@@ -76,6 +85,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
     const [from_sq_1, to_sq_1, from_sq_2, to_sq_2] = response.move_data
     const currentTime = Date.now()
     const newAnimatingPieces: typeof animatingPieces = {}
+    const newFadingPieces: typeof fadingPieces = {}
 
     // Primary piece animation (from_sq_2 -> to_sq_2)
     if (from_sq_2 !== -1 && to_sq_2 !== -1) {
@@ -88,23 +98,36 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    // Secondary piece animation (castling rook)
-    if (from_sq_1 !== -1 && to_sq_1 !== -1) {
-      const rook = boardRef.current[from_sq_1]
-      newAnimatingPieces[`secondary_${currentTime}`] = {
-        piece: rook,
-        fromSquare: from_sq_1,
-        toSquare: to_sq_1,
-        startTime: currentTime
+    // Handle capture or castling
+    if (from_sq_1 !== -1) {
+      if (to_sq_1 === -1) {
+        // Capture: fade piece at from_sq_1
+        const capturedPiece = boardRef.current[from_sq_1]
+        newFadingPieces[`captured_${currentTime}`] = {
+          piece: capturedPiece,
+          square: from_sq_1,
+          startTime: currentTime
+        }
+      } else {
+        // Castling: animate rook from from_sq_1 to to_sq_1
+        const rook = boardRef.current[from_sq_1]
+        newAnimatingPieces[`secondary_${currentTime}`] = {
+          piece: rook,
+          fromSquare: from_sq_1,
+          toSquare: to_sq_1,
+          startTime: currentTime
+        }
       }
     }
 
     setAnimatingPieces(newAnimatingPieces)
+    setFadingPieces(newFadingPieces)
 
     // Complete animation after 300ms
     setTimeout(() => {
       boardRef.current = calculateBoardUpdates(response)
       setAnimatingPieces({})
+      setFadingPieces({})
       setIsAnimating(false)
     }, 300)
   }, [calculateBoardUpdates])
@@ -248,6 +271,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         board: boardRef.current,
         isAnimating,
         animatingPieces,
+        fadingPieces,
         gameIdRef,
         roleRef,
         isUserTurn,

@@ -5,14 +5,14 @@ import { Piece } from "../helpers/constants"
 import { useChessContext } from "../hooks/useChessContext"
 
 function Pieces() {
-  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState, isAnimating, animatingPieces } =
+  const { roleRef, board, highlight, selectedSquare, setSelectedSquare, handleLightState, handleMoveState, isAnimating, animatingPieces, fadingPieces } =
     useChessContext()
 
   // Force re-renders during animations
   const [, setAnimationFrame] = useState(0)
 
   useEffect(() => {
-    if (isAnimating && Object.keys(animatingPieces).length > 0) {
+    if (isAnimating && (Object.keys(animatingPieces).length > 0 || Object.keys(fadingPieces).length > 0)) {
       const animateFrame = () => {
         setAnimationFrame(prev => prev + 1)
         requestAnimationFrame(animateFrame)
@@ -29,7 +29,7 @@ function Pieces() {
         clearTimeout(stopTimer)
       }
     }
-  }, [isAnimating, animatingPieces])
+  }, [isAnimating, animatingPieces, fadingPieces])
 
   // Helper function to calculate piece position
   function getSquarePosition(squareIndex: number) {
@@ -78,8 +78,13 @@ function Pieces() {
               animPiece => animPiece.fromSquare === i
             )
             
-            // Don't render pieces that are animating from this position
-            if (isAnimatingFromHere) return null
+            // Check if this piece is currently fading at this square
+            const isFadingHere = Object.values(fadingPieces).some(
+              fadePiece => fadePiece.square === i
+            )
+            
+            // Don't render pieces that are animating from this position or fading
+            if (isAnimatingFromHere || isFadingHere) return null
             
             const { col, row } = getSquarePosition(i)
             const isWhite = piece > Piece.BLACK_ROOK
@@ -223,6 +228,61 @@ function Pieces() {
                 <img
                   src={`/images/${animPiece.piece}.png`}
                   alt={`Animating chess piece ${animPiece.piece}`}
+                  className={`object-contain relative z-10
+                    ${isWhite ? "brightness-110 contrast-110" : "brightness-95"}`}
+                  style={{
+                    width: "var(--piece-size)",
+                    height: "var(--piece-size)",
+                    filter: `
+                      ${isWhite ? "drop-shadow(0 0 2px rgba(244,228,208,0.8))" : ""}
+                      saturate(1.1)
+                      contrast(1.05)
+                    `,
+                  }}
+                />
+              </div>
+            </div>
+          )
+        })}
+        
+        {/* Render fading pieces (captures) */}
+        {Object.entries(fadingPieces).map(([fadeId, fadePiece]) => {
+          const { col, row } = getSquarePosition(fadePiece.square)
+          const isWhite = fadePiece.piece > Piece.BLACK_ROOK
+          
+          // Calculate fade progress (0 to 1, where 1 is fully transparent)
+          const elapsed = Date.now() - fadePiece.startTime
+          const fadeProgress = Math.min(elapsed / 300, 1) // 300ms fade duration
+          const opacity = 1 - fadeProgress // Start at 1, fade to 0
+          
+          return (
+            <div
+              key={fadeId}
+              className="absolute transition-none flex items-center justify-center pointer-events-none z-25"
+              style={{
+                width: "var(--cell-size)",
+                height: "var(--cell-size)",
+                top: `calc(${row} * var(--cell-size))`,
+                left: `calc(${col} * var(--cell-size))`,
+                opacity: opacity,
+                transform: `translateZ(0)`, // Force hardware acceleration
+              }}
+            >
+              <div className="relative w-full h-full flex items-center justify-center">
+                {/* Background glow for white pieces during fade */}
+                {isWhite && (
+                  <div
+                    className="absolute inset-2 rounded-full"
+                    style={{
+                      background: "radial-gradient(circle, #f4e4d0 0%, transparent 70%)",
+                      opacity: opacity * 0.2,
+                    }}
+                  />
+                )}
+
+                <img
+                  src={`/images/${fadePiece.piece}.png`}
+                  alt={`Fading chess piece ${fadePiece.piece}`}
                   className={`object-contain relative z-10
                     ${isWhite ? "brightness-110 contrast-110" : "brightness-95"}`}
                   style={{

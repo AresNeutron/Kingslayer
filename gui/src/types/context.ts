@@ -23,6 +23,13 @@ export interface ChessContextValue {
       startTime: number;
     }
   };
+  fadingPieces: {
+    [key: string]: {
+      piece: number;
+      square: number;
+      startTime: number;
+    }
+  };
   socketRef: RefObject<WebSocket | null>;
   gameMessage: string;
   setGameMessage: Dispatch<SetStateAction<string>>;
