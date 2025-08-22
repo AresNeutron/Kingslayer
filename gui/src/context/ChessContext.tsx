@@ -53,41 +53,6 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
   // Hook WebSocket optimizado
   const { connect, send, isConnected: wsConnected } = useWebSocket()
 
-  // Calculate board updates without applying them (for post-animation)
-  const calculateBoardUpdates = useCallback((response: ServerResponse) => {
-    if (!response.move_data) return boardRef.current
-
-    const [from_sq_1, to_sq_1, from_sq_2, to_sq_2] = response.move_data
-    const newBoard = [...boardRef.current]
-    
-    // Handle primary piece movement (from_sq_2 -> to_sq_2)
-    if (from_sq_2 !== -1 && to_sq_2 !== -1) {
-      const piece = newBoard[from_sq_2]
-      newBoard[to_sq_2] = piece
-      newBoard[from_sq_2] = Piece.NO_PIECE
-    }
-    
-    // Handle secondary movement/capture (from_sq_1 -> to_sq_1)
-    if (from_sq_1 !== -1) {
-      if (to_sq_1 === -1) {
-        // Capture: remove piece at from_sq_1
-        newBoard[from_sq_1] = Piece.NO_PIECE
-      } else {
-        // Castling: move rook from from_sq_1 to to_sq_1
-        const rook = newBoard[from_sq_1]
-        newBoard[to_sq_1] = rook
-        newBoard[from_sq_1] = Piece.NO_PIECE
-      }
-    }
-    
-    // Handle promotion
-    if (response.promotion_pc !== undefined && to_sq_2 !== -1) {
-      newBoard[to_sq_2] = response.promotion_pc
-    }
-    
-    return newBoard
-  }, [])
-
   // Start promotion animation (separate from translation) - now sequential
   const startPromotionAnimation = useCallback((square: number, fromPiece: number, toPiece: number) => {
     setIsAnimating(true)
@@ -149,9 +114,14 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         }
       })
       
-      // Phase 2: After fade completes + small delay, start translation
+      // Phase 2: After fade completes, update board and start translation
       setTimeout(() => {
         setFadingPieces({}) // Clear fading pieces
+        
+        // Update board: remove captured piece immediately after fade
+        const boardAfterCapture = [...boardRef.current]
+        boardAfterCapture[from_sq_1] = Piece.NO_PIECE
+        boardRef.current = boardAfterCapture
         
         // Start translation animation
         if (from_sq_2 !== -1 && to_sq_2 !== -1) {
@@ -168,25 +138,26 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         
         // Complete translation after 300ms
         setTimeout(() => {
-          const newBoard = calculateBoardUpdates(response)
+          setAnimatingPieces({})
+          
+          // Update board: move attacking piece after translation
+          if (from_sq_2 !== -1 && to_sq_2 !== -1) {
+            const boardAfterMove = [...boardRef.current]
+            boardAfterMove[to_sq_2] = boardAfterMove[from_sq_2]
+            boardAfterMove[from_sq_2] = Piece.NO_PIECE
+            boardRef.current = boardAfterMove
+          }
           
           // Check for engine promotion
           const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
           
           if (hasPromotion) {
-            const boardWithoutPromotion = [...newBoard]
-            boardWithoutPromotion[to_sq_2] = boardRef.current[from_sq_2]
-            boardRef.current = boardWithoutPromotion
-            
             setTimeout(() => {
-              startPromotionAnimation(to_sq_2, boardRef.current[from_sq_2], response.promotion_pc!)
-            }, 200) // 200ms delay for engine promotion
+              startPromotionAnimation(to_sq_2, boardRef.current[to_sq_2], response.promotion_pc!)
+            }, 50)
           } else {
-            boardRef.current = newBoard
             setIsAnimating(false)
           }
-          
-          setAnimatingPieces({})
         }, 300)
       }, 300) // 300ms fade, no delay
       
@@ -220,28 +191,40 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
 
       // Complete translation animation after 300ms
       setTimeout(() => {
-        const newBoard = calculateBoardUpdates(response)
+        setAnimatingPieces({})
+        
+        // Update board incrementally after animation
+        const newBoard = [...boardRef.current]
+        
+        // Handle primary piece movement (from_sq_2 -> to_sq_2)
+        if (from_sq_2 !== -1 && to_sq_2 !== -1) {
+          const piece = newBoard[from_sq_2]
+          newBoard[to_sq_2] = piece
+          newBoard[from_sq_2] = Piece.NO_PIECE
+        }
+        
+        // Handle castling (from_sq_1 -> to_sq_1)
+        if (from_sq_1 !== -1 && to_sq_1 !== -1) {
+          const rook = newBoard[from_sq_1]
+          newBoard[to_sq_1] = rook
+          newBoard[from_sq_1] = Piece.NO_PIECE
+        }
+        
+        boardRef.current = newBoard
         
         // Check for engine promotion
         const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
         
         if (hasPromotion) {
-          const boardWithoutPromotion = [...newBoard]
-          boardWithoutPromotion[to_sq_2] = boardRef.current[from_sq_2]
-          boardRef.current = boardWithoutPromotion
-          
           setTimeout(() => {
-            startPromotionAnimation(to_sq_2, boardRef.current[from_sq_2], response.promotion_pc!)
-          }, 200) // 200ms delay for engine promotion
+            startPromotionAnimation(to_sq_2, boardRef.current[to_sq_2], response.promotion_pc!)
+          }, 50)
         } else {
-          boardRef.current = newBoard
           setIsAnimating(false)
         }
-        
-        setAnimatingPieces({})
       }, 300)
     }
-  }, [calculateBoardUpdates, startPromotionAnimation])
+  }, [startPromotionAnimation])
 
   const handleMessage = useCallback((messageEvent: MessageEvent) => {
     try {
@@ -276,6 +259,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
 
         case "checkmate":
           setGameMessage("Game Over")
+          setThreats(BigInt(response.event_data));
           setIsUserTurn(false)
           break
 
