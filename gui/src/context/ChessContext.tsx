@@ -53,7 +53,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
   // Hook WebSocket optimizado
   const { connect, send, isConnected: wsConnected } = useWebSocket()
 
-  // Start promotion animation (separate from translation) - now sequential
+  // Start promotion animation (separate from translation) - now sequential with incremental board updates
   const startPromotionAnimation = useCallback((square: number, fromPiece: number, toPiece: number) => {
     setIsAnimating(true)
     const currentTime = Date.now()
@@ -69,8 +69,14 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
       }
     })
 
-    // Phase 2: Scale up/appear the new piece (after 200ms delay)
+    // Phase 2: After fade out completes, update board and start fade in
     setTimeout(() => {
+      // Update board: remove the old piece after fade out
+      const boardAfterFadeOut = [...boardRef.current]
+      boardAfterFadeOut[square] = Piece.NO_PIECE
+      boardRef.current = boardAfterFadeOut
+      
+      // Start fade in animation for new piece
       setPromotingPieces({
         [`promotion_phase2_${currentTime + 200}`]: {
           fromPiece,
@@ -81,9 +87,13 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         }
       })
 
-      // Complete promotion animation after another 200ms
+      // Complete promotion animation after fade in completes
       setTimeout(() => {
-        boardRef.current[square] = toPiece
+        // Update board: add the new piece after fade in
+        const boardAfterFadeIn = [...boardRef.current]
+        boardAfterFadeIn[square] = toPiece
+        boardRef.current = boardAfterFadeIn
+        
         setPromotingPieces({})
         setIsAnimating(false)
       }, 200)
@@ -152,6 +162,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
           const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
           
           if (hasPromotion) {
+            // For engine promotion: piece is already moved, now start promotion animation
             setTimeout(() => {
               startPromotionAnimation(to_sq_2, boardRef.current[to_sq_2], response.promotion_pc!)
             }, 50)
@@ -216,6 +227,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         const hasPromotion = response.promotion_pc !== undefined && to_sq_2 !== -1
         
         if (hasPromotion) {
+          // For engine promotion: piece is already moved, now start promotion animation
           setTimeout(() => {
             startPromotionAnimation(to_sq_2, boardRef.current[to_sq_2], response.promotion_pc!)
           }, 50)
