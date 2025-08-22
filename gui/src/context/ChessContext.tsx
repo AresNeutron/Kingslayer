@@ -396,6 +396,7 @@ const ChessProvider = ({ children }: { children: ReactNode }) => {
         gameMessage,
         setGameMessage,
         initializeWebSocket,
+        setThreats,
       }}
     >
       {children}

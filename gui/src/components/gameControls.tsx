@@ -35,6 +35,7 @@ function GameControls({
     gameMessage,
     setGameMessage,
     initializeWebSocket,
+    setThreats,
   } = useChessContext();
 
   const startGame = async (isWhite: boolean) => {
@@ -51,6 +52,7 @@ function GameControls({
       setIsPlaying(true);
       setGameMessage("");
       boardRef.current = initialBoard;
+      setThreats(0n);
     } catch (error) {
       console.error("Error creating game:", error);
       setGameMessage("The forge has failed us...");
@@ -72,6 +74,7 @@ function GameControls({
       setGameMessage("");
       setShowButtons(true);
       boardRef.current = initialBoard;
+      setThreats(0n);
     }, 300);
   };
 

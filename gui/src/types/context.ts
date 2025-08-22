@@ -43,4 +43,5 @@ export interface ChessContextValue {
   gameMessage: string;
   setGameMessage: Dispatch<SetStateAction<string>>;
   initializeWebSocket: (gameId: string) => Promise<WebSocket>;
+  setThreats: Dispatch<SetStateAction<bigint>>;
 }
